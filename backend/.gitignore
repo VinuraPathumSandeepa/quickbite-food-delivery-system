@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### QuickBite deployment / local files ###
+app.jar
+hs_err_pid*.log
+
+### Environment / secrets ###
+.env
+.env.*
+application-local.properties
+application-dev.properties
