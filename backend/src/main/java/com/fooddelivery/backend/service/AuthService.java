@@ -32,6 +32,10 @@ public class AuthService {
             selectedRole = Role.CUSTOMER;
         }
 
+        if (selectedRole == Role.ADMIN) {
+            throw new IllegalArgumentException("Admin registration is not available");
+        }
+
         User user = new User();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
