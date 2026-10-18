@@ -11,7 +11,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/categories")
-@CrossOrigin(origins = "http://localhost:5173")
 public class CategoryController {
 
     private final CategoryService categoryService;

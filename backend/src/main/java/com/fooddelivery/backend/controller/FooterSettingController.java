@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/footer-settings")
-@CrossOrigin(origins = "http://localhost:5173")
 public class FooterSettingController {
 
     private final FooterSettingService footerSettingService;
