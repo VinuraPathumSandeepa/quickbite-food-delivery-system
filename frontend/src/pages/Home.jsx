@@ -4,6 +4,7 @@ import api from "../api/api";
 import Navbar from "../components/Navbar";
 import FoodCard from "../components/FoodCard";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 
 function Home() {
   const [featuredFoods, setFeaturedFoods] = useState([]);
@@ -202,7 +203,12 @@ function Home() {
                 className="collection-card collection-marquee-card"
                 key={`${collection.id}-${index}`}
               >
-                <img src={collection.imageUrl} alt={collection.title} />
+                <img
+                  src={foodImageSource(collection.imageUrl)}
+                  alt={collection.title}
+                  onError={handleFoodImageError}
+                  decoding="async"
+                />
                 <h3>{collection.title}</h3>
               </div>
             ))}

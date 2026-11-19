@@ -5,6 +5,7 @@ import PageHeader from "../components/PageHeader";
 import FoodCard from "../components/FoodCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
+import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 
 function Menu() {
   const [foods, setFoods] = useState([]);
@@ -181,9 +182,10 @@ function Menu() {
                     <div className="suggestion-left">
                       {suggestion.imageUrl ? (
                         <img
-                          src={suggestion.imageUrl}
+                          src={foodImageSource(suggestion.imageUrl)}
                           alt={suggestion.label}
                           className="suggestion-image"
+                          onError={handleFoodImageError}
                         />
                       ) : (
                         <div className="suggestion-icon">🍽️</div>

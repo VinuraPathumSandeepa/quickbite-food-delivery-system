@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" role="img" aria-label="Food image unavailable">
+  <rect width="600" height="400" fill="#fff7f2"/>
+  <circle cx="300" cy="200" r="112" fill="#ffffff" stroke="#f3ded2" stroke-width="12"/>
+  <circle cx="300" cy="200" r="76" fill="#fff7f2" stroke="#f3ded2" stroke-width="6"/>
+  <path d="M151 113v174m-22-174v64c0 13 10 23 22 23s22-10 22-23v-64m278 0c-27 21-41 55-41 96v78" fill="none" stroke="#e8b9a2" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M410 209h41v-96" fill="none" stroke="#e8b9a2" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

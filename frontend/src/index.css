@@ -467,6 +467,9 @@ button:disabled {
 }
 
 .food-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 28px;
@@ -481,24 +484,33 @@ button:disabled {
 }
 
 .food-image-wrap {
-  height: 240px;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   border: 6px solid #ffffff;
   border-radius: 28px 28px 0 0;
+  background: #fff7f2;
 }
 
 .food-image {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #fff7f2;
 }
 
 .food-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 272px;
   padding: 24px;
 }
 
 .food-info h3 {
   margin: 8px 0 10px;
+  min-height: 2.4em;
   color: var(--dark);
   font-size: 22px;
 }
@@ -518,6 +530,7 @@ button:disabled {
 .food-meta {
   display: flex;
   justify-content: space-between;
+  margin-top: auto;
   color: var(--muted);
   font-weight: 800;
 }
@@ -554,11 +567,12 @@ button:disabled {
 }
 
 .collection-card img {
-  width: 100%;
-  height: 260px;
-  object-fit: cover;
   display: block;
-  background: #f3f4f6;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  object-position: center;
+  background: #fff7f2;
 }
 
 .collection-card h3 {
@@ -1742,10 +1756,6 @@ textarea:focus {
   .collection-grid,
   .dashboard-grid {
     grid-template-columns: 1fr;
-  }
-
-  .collection-card img {
-    height: 220px;
   }
 
   .collection-card h3 {
@@ -6367,14 +6377,6 @@ textarea:focus {
   box-shadow: 0 24px 60px rgba(21, 27, 38, 0.12);
 }
 
-.food-card:hover .food-image {
-  transform: scale(1.06);
-}
-
-.food-image {
-  transition: transform 0.45s ease;
-}
-
 /* Collection cards */
 .collection-card {
   animation: homeFadeUp 0.7s ease both;
@@ -6384,14 +6386,6 @@ textarea:focus {
 .collection-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 24px 60px rgba(21, 27, 38, 0.12);
-}
-
-.collection-card img {
-  transition: transform 0.5s ease;
-}
-
-.collection-card:hover img {
-  transform: scale(1.07);
 }
 
 /* Stagger effect for cards */

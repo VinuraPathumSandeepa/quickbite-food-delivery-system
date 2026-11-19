@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
+import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 
 function FoodCard({ food }) {
   const { currentUser } = useAuth();
@@ -10,10 +11,6 @@ function FoodCard({ food }) {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
-
-  const imageUrl =
-    food.imageUrl ||
-    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38";
 
   useEffect(() => {
     return () => {
@@ -83,7 +80,13 @@ function FoodCard({ food }) {
     <>
       <div className="food-card">
         <div className="food-image-wrap">
-          <img src={imageUrl} alt={food.name} className="food-image" />
+          <img
+            src={foodImageSource(food.imageUrl)}
+            alt={food.name}
+            className="food-image"
+            onError={handleFoodImageError}
+            decoding="async"
+          />
         </div>
 
         <div className="food-info">
