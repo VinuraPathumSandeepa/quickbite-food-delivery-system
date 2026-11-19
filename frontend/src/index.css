@@ -58,12 +58,9 @@ img {
 }
 
 .app-page {
-  width: min(1760px, calc(100% - 48px));
-  margin: 0 auto;
+  width: 100%;
   min-height: 100vh;
   background: #ffffff;
-  border-left: 1px solid rgba(255, 255, 255, 0.9);
-  border-right: 1px solid rgba(255, 255, 255, 0.9);
   overflow: hidden;
 }
 
@@ -2195,14 +2192,11 @@ textarea:focus {
 ================================ */
 
 .admin-layout-page {
-  width: min(1760px, calc(100% - 48px));
-  margin: 0 auto;
+  width: 100%;
   min-height: 100vh;
   display: grid;
   grid-template-columns: 290px 1fr;
   background: #f6f7fb;
-  border-left: 1px solid rgba(255, 255, 255, 0.9);
-  border-right: 1px solid rgba(255, 255, 255, 0.9);
 }
 
 .admin-sidebar {
