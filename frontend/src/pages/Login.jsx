@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
+import { getLandingPath } from "../context/session";
 import {
   getBackendFieldErrors,
   validateLoginForm,
 } from "../utils/validation";
 
 function Login() {
-  const { loginUser } = useAuth();
+  const { currentUser, loginUser } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -34,16 +35,6 @@ function Login() {
     setErrorMessage("");
   };
 
-  const redirectByRole = (role) => {
-    if (role === "ADMIN") {
-      navigate("/admin/dashboard");
-    } else if (role === "DELIVERY") {
-      navigate("/delivery/dashboard");
-    } else {
-      navigate("/menu");
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -61,7 +52,7 @@ function Login() {
 
       const user = await loginUser(formData.email, formData.password);
 
-      redirectByRole(user.role);
+      navigate(getLandingPath(user.role), { replace: true });
     } catch (error) {
       const backendErrors = getBackendFieldErrors(error);
 
@@ -77,6 +68,10 @@ function Login() {
       setLoggingIn(false);
     }
   };
+
+  if (currentUser) {
+    return <Navigate to={getLandingPath(currentUser.role)} replace />;
+  }
 
   return (
     <div className="app-page">

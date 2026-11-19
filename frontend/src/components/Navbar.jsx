@@ -6,8 +6,8 @@ function Navbar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    navigate("/login", { replace: true });
     logoutUser();
-    navigate("/");
   };
 
   const getNavLinks = () => {

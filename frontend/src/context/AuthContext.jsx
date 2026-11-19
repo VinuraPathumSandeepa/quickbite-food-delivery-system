@@ -1,17 +1,26 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../api/api";
+import { readStoredUser } from "./session";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(readStoredUser);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("foodUser");
+    const restoreSession = (event) => {
+      if (event.persisted) setCurrentUser(readStoredUser());
+    };
+    const syncStorage = (event) => {
+      if (event.key === "foodUser") setCurrentUser(readStoredUser());
+    };
 
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
+    window.addEventListener("pageshow", restoreSession);
+    window.addEventListener("storage", syncStorage);
+    return () => {
+      window.removeEventListener("pageshow", restoreSession);
+      window.removeEventListener("storage", syncStorage);
+    };
   }, []);
 
   const registerUser = async (formData) => {

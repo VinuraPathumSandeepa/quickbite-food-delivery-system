@@ -40,8 +40,8 @@ function AdminLayout({ title, subtitle, children }) {
   ];
 
   const handleLogout = () => {
+    navigate("/login", { replace: true });
     logoutUser();
-    navigate("/");
   };
 
   const getInitials = (name) => {

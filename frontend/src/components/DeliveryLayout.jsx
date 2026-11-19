@@ -30,8 +30,8 @@ function DeliveryLayout({ title, subtitle, children }) {
   ];
 
   const handleLogout = () => {
+    navigate("/login", { replace: true });
     logoutUser();
-    navigate("/");
   };
 
   const getInitials = (name) => {
