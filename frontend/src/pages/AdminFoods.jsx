@@ -4,6 +4,7 @@ import AdminLayout from "../components/AdminLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
 import StatusBadge from "../components/StatusBadge";
+import ConfirmActionDialog from "../components/ConfirmActionDialog";
 import {
   getBackendFieldErrors,
   validateFoodForm,
@@ -17,6 +18,8 @@ function AdminFoods() {
   const [messageType, setMessageType] = useState("success");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -161,18 +164,21 @@ function AdminFoods() {
     });
   };
 
-  const deleteFood = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this food item?"
-    );
-
-    if (!confirmDelete) return;
-
+  const deleteFood = async () => {
+    if (!pendingDelete) return;
     try {
-      await api.delete(`/foods/${id}`);
+      setDeleting(true);
+      await api.delete(`/foods/${pendingDelete.id}`);
+      setPendingDelete(null);
       loadFoods();
+      setMessage("Food item deleted successfully.");
+      setMessageType("success");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to delete food item.");
+      setMessage(error.response?.data?.message || "Failed to delete food item.");
+      setMessageType("error");
+      setPendingDelete(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -367,7 +373,7 @@ function AdminFoods() {
 
                       <button
                         className="table-delete-btn"
-                        onClick={() => deleteFood(food.id)}
+                        onClick={() => setPendingDelete(food)}
                       >
                         Delete
                       </button>
@@ -379,6 +385,7 @@ function AdminFoods() {
           )}
         </div>
       </div>
+      {pendingDelete && <ConfirmActionDialog title="Delete food item?" description={`Delete ${pendingDelete.name}? This action cannot be undone.`} busy={deleting} onClose={() => { if (!deleting) setPendingDelete(null); }} onConfirm={deleteFood} confirmLabel="Delete food" />}
     </AdminLayout>
   );
 }

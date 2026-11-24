@@ -4,6 +4,7 @@ import AdminLayout from "../components/AdminLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
 import StatusBadge from "../components/StatusBadge";
+import ConfirmActionDialog from "../components/ConfirmActionDialog";
 import {
   getBackendFieldErrors,
   validateCollectionForm,
@@ -16,6 +17,8 @@ function AdminCollections() {
   const [messageType, setMessageType] = useState("success");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -137,18 +140,21 @@ function AdminCollections() {
     });
   };
 
-  const deleteCollection = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this collection?"
-    );
-
-    if (!confirmDelete) return;
-
+  const deleteCollection = async () => {
+    if (!pendingDelete) return;
     try {
-      await api.delete(`/collections/${id}`);
+      setDeleting(true);
+      await api.delete(`/collections/${pendingDelete.id}`);
+      setPendingDelete(null);
       loadCollections();
+      setMessage("Collection deleted successfully.");
+      setMessageType("success");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to delete collection.");
+      setMessage(error.response?.data?.message || "Failed to delete collection.");
+      setMessageType("error");
+      setPendingDelete(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -292,7 +298,7 @@ function AdminCollections() {
 
                       <button
                         className="table-delete-btn"
-                        onClick={() => deleteCollection(collection.id)}
+                        onClick={() => setPendingDelete(collection)}
                       >
                         Delete
                       </button>
@@ -304,6 +310,7 @@ function AdminCollections() {
           )}
         </div>
       </div>
+      {pendingDelete && <ConfirmActionDialog title="Delete collection?" description={`Delete ${pendingDelete.title}? This action cannot be undone.`} busy={deleting} onClose={() => { if (!deleting) setPendingDelete(null); }} onConfirm={deleteCollection} confirmLabel="Delete collection" />}
     </AdminLayout>
   );
 }

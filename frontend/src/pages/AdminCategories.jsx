@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import api from "../api/api";
 import AdminLayout from "../components/AdminLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
+import ConfirmActionDialog from "../components/ConfirmActionDialog";
 import {
   getBackendFieldErrors,
   validateCategoryForm,
@@ -20,6 +21,8 @@ function AdminCategories() {
   const [messageType, setMessageType] = useState("success");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadCategories = useCallback(async () => {
     try {
@@ -114,21 +117,21 @@ function AdminCategories() {
     });
   };
 
-  const deleteCategory = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this category?"
-    );
-
-    if (!confirmDelete) return;
-
+  const deleteCategory = async () => {
+    if (!pendingDelete) return;
     try {
-      await api.delete(`/categories/${id}`);
+      setDeleting(true);
+      await api.delete(`/categories/${pendingDelete.id}`);
+      setPendingDelete(null);
       loadCategories();
+      setMessage("Category deleted successfully.");
+      setMessageType("success");
     } catch (error) {
-      alert(
-        error.response?.data?.message ||
-          "Failed to delete category. It may already be used by food items."
-      );
+      setMessage(error.response?.data?.message || "Failed to delete category. It may already be used by food items.");
+      setMessageType("error");
+      setPendingDelete(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -224,7 +227,7 @@ function AdminCategories() {
 
                         <button
                           className="table-delete-btn"
-                          onClick={() => deleteCategory(category.id)}
+                          onClick={() => setPendingDelete(category)}
                         >
                           Delete
                         </button>
@@ -243,6 +246,7 @@ function AdminCategories() {
           )}
         </div>
       </div>
+      {pendingDelete && <ConfirmActionDialog title="Delete category?" description={`Delete ${pendingDelete.name}? This may affect food items that use it.`} busy={deleting} onClose={() => { if (!deleting) setPendingDelete(null); }} onConfirm={deleteCategory} confirmLabel="Delete category" />}
     </AdminLayout>
   );
 }
