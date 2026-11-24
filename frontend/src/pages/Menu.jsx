@@ -14,6 +14,7 @@ function Menu() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("ALL");
   const [sortDirection, setSortDirection] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -171,6 +172,7 @@ function Menu() {
 
               <input
                 type="text"
+                aria-label="Search the food menu"
                 placeholder="Search pizza, rice, burger..."
                 value={searchTerm}
                 onChange={(e) => {
@@ -228,7 +230,12 @@ function Menu() {
             )}
           </div>
 
-          <div className="filter-grid">
+          <button type="button" className="mobile-filter-toggle" aria-expanded={filtersOpen} aria-controls="menu-filters" onClick={() => setFiltersOpen((open) => !open)}>
+            {filtersOpen ? "Hide filters" : "Categories & sort"}
+            <span aria-hidden="true">{filtersOpen ? "−" : "+"}</span>
+          </button>
+
+          <div id="menu-filters" className={`filter-grid${filtersOpen ? " mobile-filters-open" : ""}`}>
             <div className="filter-group">
               <div className="filter-label-row">
                 <span className="filter-label">Categories</span>

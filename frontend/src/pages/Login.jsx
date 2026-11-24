@@ -20,6 +20,7 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData((previous) => ({
@@ -82,30 +83,43 @@ function Login() {
           <h1>Welcome Back</h1>
           <p>Login to continue your food order journey.</p>
 
-          {errorMessage && <div className="error-box">{errorMessage}</div>}
+          {errorMessage && <div className="error-box" role="alert">{errorMessage}</div>}
 
-          <label>Email</label>
+          <label htmlFor="login-email">Email</label>
           <input
+            id="login-email"
             className={errors.email ? "input-error" : ""}
             type="email"
             name="email"
+            autoComplete="email"
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? "login-email-error" : undefined}
             placeholder="Enter email"
             value={formData.email}
             onChange={handleChange}
           />
-          {errors.email && <span className="field-error">{errors.email}</span>}
+          {errors.email && <span className="field-error" id="login-email-error">{errors.email}</span>}
 
-          <label>Password</label>
-          <input
-            className={errors.password ? "input-error" : ""}
-            type="password"
-            name="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <label htmlFor="login-password">Password</label>
+          <div className="password-field">
+            <input
+              id="login-password"
+              className={errors.password ? "input-error" : ""}
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Enter password"
+              autoComplete="current-password"
+              aria-invalid={Boolean(errors.password)}
+              aria-describedby={errors.password ? "login-password-error" : undefined}
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <button className="password-toggle" type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           {errors.password && (
-            <span className="field-error">{errors.password}</span>
+            <span className="field-error" id="login-password-error">{errors.password}</span>
           )}
 
           <button type="submit" className="full-btn" disabled={loggingIn}>

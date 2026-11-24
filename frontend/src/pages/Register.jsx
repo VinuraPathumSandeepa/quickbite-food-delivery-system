@@ -27,6 +27,7 @@ function Register() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [registering, setRegistering] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData((previous) => ({
@@ -102,16 +103,18 @@ function Register() {
           <h1>Create Account</h1>
           <p>Register as customer or delivery person.</p>
 
-          {errorMessage && <div className="error-box">{errorMessage}</div>}
+          {errorMessage && <div className="error-box" role="alert">{errorMessage}</div>}
           {successMessage && (
-            <div className="success-box">{successMessage}</div>
+            <div className="success-box" role="status">{successMessage}</div>
           )}
 
-          <label>Full Name</label>
+          <label htmlFor="register-fullName">Full Name</label>
           <input
+            id="register-fullName"
             className={errors.fullName ? "input-error" : ""}
             type="text"
             name="fullName"
+            autoComplete="name"
             placeholder="Enter full name"
             value={formData.fullName}
             onChange={handleChange}
@@ -120,35 +123,44 @@ function Register() {
             <span className="field-error">{errors.fullName}</span>
           )}
 
-          <label>Email</label>
+          <label htmlFor="register-email">Email</label>
           <input
+            id="register-email"
             className={errors.email ? "input-error" : ""}
             type="email"
             name="email"
+            autoComplete="email"
             placeholder="Enter email"
             value={formData.email}
             onChange={handleChange}
           />
           {errors.email && <span className="field-error">{errors.email}</span>}
 
-          <label>Password</label>
-          <input
-            className={errors.password ? "input-error" : ""}
-            type="password"
-            name="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <label htmlFor="register-password">Password</label>
+          <div className="password-field">
+            <input
+              id="register-password"
+              className={errors.password ? "input-error" : ""}
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Enter password"
+              autoComplete="new-password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <button className="password-toggle" type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide passwords" : "Show passwords"} aria-pressed={showPassword}>{showPassword ? "Hide" : "Show"}</button>
+          </div>
           {errors.password && (
             <span className="field-error">{errors.password}</span>
           )}
 
-          <label>Confirm Password</label>
+          <label htmlFor="register-confirmPassword">Confirm Password</label>
           <input
+            id="register-confirmPassword"
             className={errors.confirmPassword ? "input-error" : ""}
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="confirmPassword"
+            autoComplete="new-password"
             placeholder="Re-enter password"
             value={formData.confirmPassword}
             onChange={handleChange}
@@ -157,22 +169,26 @@ function Register() {
             <span className="field-error">{errors.confirmPassword}</span>
           )}
 
-          <label>Phone</label>
+          <label htmlFor="register-phone">Phone</label>
           <input
+            id="register-phone"
             className={errors.phone ? "input-error" : ""}
             type="text"
             name="phone"
+            autoComplete="tel"
             placeholder="Enter phone number"
             value={formData.phone}
             onChange={handleChange}
           />
           {errors.phone && <span className="field-error">{errors.phone}</span>}
 
-          <label>Address</label>
+          <label htmlFor="register-address">Address</label>
           <input
+            id="register-address"
             className={errors.address ? "input-error" : ""}
             type="text"
             name="address"
+            autoComplete="street-address"
             placeholder="Enter address"
             value={formData.address}
             onChange={handleChange}
@@ -181,16 +197,17 @@ function Register() {
             <span className="field-error">{errors.address}</span>
           )}
 
-          <label>Register As</label>
-          <select name="role" value={formData.role} onChange={handleChange}>
+          <label htmlFor="register-role">Register As</label>
+          <select id="register-role" name="role" value={formData.role} onChange={handleChange}>
             <option value="CUSTOMER">Customer</option>
             <option value="DELIVERY">Delivery Person</option>
           </select>
 
           {formData.role === "DELIVERY" && (
             <>
-              <label>Vehicle Type</label>
+              <label htmlFor="register-vehicleType">Vehicle Type</label>
               <input
+                id="register-vehicleType"
                 className={errors.vehicleType ? "input-error" : ""}
                 type="text"
                 name="vehicleType"
@@ -202,8 +219,9 @@ function Register() {
                 <span className="field-error">{errors.vehicleType}</span>
               )}
 
-              <label>Vehicle Number</label>
+              <label htmlFor="register-vehicleNumber">Vehicle Number</label>
               <input
+                id="register-vehicleNumber"
                 className={errors.vehicleNumber ? "input-error" : ""}
                 type="text"
                 name="vehicleNumber"
