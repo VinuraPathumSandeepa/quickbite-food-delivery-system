@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
@@ -14,6 +14,7 @@ import {
 
 function Profile() {
   const { currentUser, updateCurrentUser } = useAuth();
+  const userId = currentUser?.id;
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -31,17 +32,11 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      loadProfile();
-    }
-  }, [currentUser?.id]);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       setLoading(true);
 
-      const response = await api.get(`/users/${currentUser.id}`);
+      const response = await api.get(`/users/${userId}`);
       const user = response.data;
 
       setFormData({
@@ -61,7 +56,11 @@ function Profile() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) void Promise.resolve().then(loadProfile);
+  }, [userId, loadProfile]);
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -348,8 +347,9 @@ function Profile() {
 
               <div className="profile-form-grid">
                 <div>
-                  <label>Full Name</label>
+                  <label htmlFor="profile-fullName">Full Name</label>
                   <input
+                    id="profile-fullName"
                     className={errors.fullName ? "input-error" : ""}
                     type="text"
                     name="fullName"
@@ -363,8 +363,9 @@ function Profile() {
                 </div>
 
                 <div>
-                  <label>Email</label>
+                  <label htmlFor="profile-email">Email</label>
                   <input
+                    id="profile-email"
                     className={errors.email ? "input-error" : ""}
                     type="email"
                     name="email"
@@ -378,8 +379,9 @@ function Profile() {
                 </div>
 
                 <div>
-                  <label>Phone Number</label>
+                  <label htmlFor="profile-phone">Phone Number</label>
                   <input
+                    id="profile-phone"
                     className={errors.phone ? "input-error" : ""}
                     type="text"
                     name="phone"
@@ -393,8 +395,9 @@ function Profile() {
                 </div>
 
                 <div>
-                  <label>Role</label>
+                  <label htmlFor="profile-role">Role</label>
                   <input
+                    id="profile-role"
                     type="text"
                     value={formatRole(formData.role)}
                     disabled
@@ -403,8 +406,9 @@ function Profile() {
                 </div>
 
                 <div className="profile-form-full">
-                  <label>Address</label>
+                  <label htmlFor="profile-address">Address</label>
                   <textarea
+                    id="profile-address"
                     className={errors.address ? "input-error" : ""}
                     name="address"
                     value={formData.address}
@@ -419,8 +423,9 @@ function Profile() {
                 {formData.role === "DELIVERY" && (
                   <>
                     <div>
-                      <label>Vehicle Type</label>
+                      <label htmlFor="profile-vehicleType">Vehicle Type</label>
                       <input
+                        id="profile-vehicleType"
                         className={errors.vehicleType ? "input-error" : ""}
                         type="text"
                         name="vehicleType"
@@ -436,8 +441,9 @@ function Profile() {
                     </div>
 
                     <div>
-                      <label>Vehicle Number</label>
+                      <label htmlFor="profile-vehicleNumber">Vehicle Number</label>
                       <input
+                        id="profile-vehicleNumber"
                         className={errors.vehicleNumber ? "input-error" : ""}
                         type="text"
                         name="vehicleNumber"

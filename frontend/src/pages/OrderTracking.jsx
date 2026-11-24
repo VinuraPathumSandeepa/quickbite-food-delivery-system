@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
@@ -56,11 +56,7 @@ function OrderTracking() {
     },
   ];
 
-  useEffect(() => {
-    loadOrder();
-  }, [orderId]);
-
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(`/orders/${orderId}`);
@@ -71,7 +67,11 @@ function OrderTracking() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadOrder);
+  }, [loadOrder]);
 
   const getCurrentStepIndex = () => {
     if (!order) return -1;

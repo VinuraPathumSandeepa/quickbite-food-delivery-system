@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
@@ -6,10 +6,12 @@ import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
+import DialogShell from "../components/DialogShell";
 import { useAuth } from "../context/AuthContext";
 
 function MyOrders() {
   const { currentUser } = useAuth();
+  const userId = currentUser.id;
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
@@ -23,15 +25,11 @@ function MyOrders() {
   const [cancelling, setCancelling] = useState(false);
   const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
 
-      const response = await api.get(`/orders/customer/${currentUser.id}`);
+      const response = await api.get(`/orders/customer/${userId}`);
 
       const sortedOrders = [...response.data].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -44,7 +42,11 @@ function MyOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadOrders);
+  }, [loadOrders]);
 
   const formatCurrency = (amount) => {
     return `Rs. ${Number(amount || 0).toFixed(2)}`;
@@ -227,6 +229,7 @@ function MyOrders() {
                 <span>🔍</span>
                 <input
                   type="text"
+                  aria-label="Search orders by ID, status or food"
                   placeholder="Search order ID, status, food..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -386,10 +389,11 @@ function MyOrders() {
       </section>
 
       {orderToCancel && (
-        <div className="confirm-modal-overlay">
+        <DialogShell titleId="cancel-order-title" onClose={closeCancelModal}>
           <div className="confirm-modal-card">
             <button
               className="confirm-modal-close"
+              aria-label="Close cancel order dialog"
               onClick={closeCancelModal}
               disabled={cancelling}
             >
@@ -398,7 +402,7 @@ function MyOrders() {
 
             <div className="confirm-modal-icon">⚠️</div>
 
-            <h2>Cancel Order?</h2>
+            <h2 id="cancel-order-title">Cancel Order?</h2>
 
             <p>
               Are you sure you want to cancel{" "}
@@ -424,7 +428,7 @@ function MyOrders() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogShell>
       )}
 
       {toast && (

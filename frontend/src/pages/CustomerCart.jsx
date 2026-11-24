@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
 import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
+import DialogShell from "../components/DialogShell";
 import { useAuth } from "../context/AuthContext";
 
 function CustomerCart() {
   const { currentUser } = useAuth();
+  const userId = currentUser.id;
   const navigate = useNavigate();
 
   const [cartItems, setCartItems] = useState([]);
@@ -19,15 +21,11 @@ function CustomerCart() {
   const [removing, setRemoving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    loadCart();
-  }, []);
-
-  const loadCart = async () => {
+  const loadCart = useCallback(async () => {
     try {
       setLoading(true);
 
-      const response = await api.get(`/cart/${currentUser.id}`);
+      const response = await api.get(`/cart/${userId}`);
       setCartItems(response.data);
       setMessage("");
     } catch (error) {
@@ -35,7 +33,11 @@ function CustomerCart() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadCart);
+  }, [loadCart]);
 
   const cartData = useMemo(() => {
     const totalAmount = cartItems.reduce((total, item) => {
@@ -176,9 +178,10 @@ function CustomerCart() {
                   </div>
 
                   <div className="cart-food-actions">
-                    <label>Quantity</label>
+                    <label htmlFor={`cart-quantity-${item.id}`}>Quantity</label>
 
                     <input
+                      id={`cart-quantity-${item.id}`}
                       type="number"
                       min="1"
                       value={item.quantity}
@@ -239,10 +242,11 @@ function CustomerCart() {
       </section>
 
       {itemToRemove && (
-        <div className="confirm-modal-overlay">
+        <DialogShell titleId="remove-item-title" onClose={closeRemoveModal}>
           <div className="confirm-modal-card">
             <button
               className="confirm-modal-close"
+              aria-label="Close remove item dialog"
               onClick={closeRemoveModal}
               disabled={removing}
             >
@@ -251,7 +255,7 @@ function CustomerCart() {
 
             <div className="confirm-modal-icon">🗑️</div>
 
-            <h2>Remove Item?</h2>
+            <h2 id="remove-item-title">Remove Item?</h2>
 
             <p>
               Are you sure you want to remove{" "}
@@ -276,7 +280,7 @@ function CustomerCart() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogShell>
       )}
 
       {toast && (

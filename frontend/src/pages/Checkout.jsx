@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
@@ -35,11 +35,7 @@ function Checkout() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successOrder, setSuccessOrder] = useState(null);
 
-  useEffect(() => {
-    loadCart();
-  }, []);
-
-  const loadCart = async () => {
+  const loadCart = useCallback(async () => {
     try {
       setLoadingCart(true);
 
@@ -51,7 +47,11 @@ function Checkout() {
     } finally {
       setLoadingCart(false);
     }
-  };
+  }, [currentUser.id]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadCart);
+  }, [loadCart]);
 
   const checkoutData = useMemo(() => {
     const subtotal = cartItems.reduce((total, item) => {
@@ -245,8 +245,9 @@ function Checkout() {
               </div>
 
               <div className="checkout-field-group">
-                <label>Delivery Address</label>
+                <label htmlFor="checkout-deliveryAddress">Delivery Address</label>
                 <input
+                  id="checkout-deliveryAddress"
                   className={errors.deliveryAddress ? "input-error" : ""}
                   type="text"
                   name="deliveryAddress"
@@ -260,8 +261,9 @@ function Checkout() {
               </div>
 
               <div className="checkout-field-group">
-                <label>Order Notes</label>
+                <label htmlFor="checkout-notes">Order Notes</label>
                 <textarea
+                  id="checkout-notes"
                   className={errors.notes ? "input-error" : ""}
                   name="notes"
                   value={formData.notes}
@@ -339,8 +341,9 @@ function Checkout() {
                   </div>
 
                   <div className="checkout-field-group">
-                    <label>Card Holder Name</label>
+                    <label htmlFor="checkout-cardHolderName">Card Holder Name</label>
                     <input
+                      id="checkout-cardHolderName"
                       className={errors.cardHolderName ? "input-error" : ""}
                       type="text"
                       name="cardHolderName"
@@ -356,8 +359,9 @@ function Checkout() {
                   </div>
 
                   <div className="checkout-field-group">
-                    <label>Card Number</label>
+                    <label htmlFor="checkout-cardNumber">Card Number</label>
                     <input
+                      id="checkout-cardNumber"
                       className={errors.cardNumber ? "input-error" : ""}
                       type="text"
                       name="cardNumber"
@@ -374,8 +378,9 @@ function Checkout() {
 
                   <div className="card-field-row">
                     <div className="checkout-field-group">
-                      <label>Expiry Date</label>
+                      <label htmlFor="checkout-expiryDate">Expiry Date</label>
                       <input
+                        id="checkout-expiryDate"
                         className={errors.expiryDate ? "input-error" : ""}
                         type="text"
                         name="expiryDate"
@@ -393,8 +398,9 @@ function Checkout() {
                     </div>
 
                     <div className="checkout-field-group">
-                      <label>CVV</label>
+                      <label htmlFor="checkout-cvv">CVV</label>
                       <input
+                        id="checkout-cvv"
                         className={errors.cvv ? "input-error" : ""}
                         type="text"
                         name="cvv"
