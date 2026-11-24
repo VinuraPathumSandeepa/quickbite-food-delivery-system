@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
+import Icon from "./Icon";
 
 function DeliveryLayout({ title, subtitle, children }) {
   const { currentUser, logoutUser } = useAuth();
@@ -10,22 +11,22 @@ function DeliveryLayout({ title, subtitle, children }) {
     {
       path: "/delivery/dashboard",
       label: "Dashboard",
-      icon: "📊",
+      icon: "dashboard",
     },
     {
       path: "/delivery/assigned-orders",
       label: "Assigned Orders",
-      icon: "🚚",
+      icon: "delivery",
     },
     {
       path: "/delivery/completed-orders",
       label: "Completed Orders",
-      icon: "✅",
+      icon: "check",
     },
     {
       path: "/profile",
       label: "My Profile",
-      icon: "👤",
+      icon: "user",
     },
   ];
 
@@ -52,7 +53,7 @@ function DeliveryLayout({ title, subtitle, children }) {
     <div className="delivery-layout-page">
       <aside className="delivery-sidebar">
         <div className="delivery-sidebar-brand">
-          <span>🚚</span>
+          <span><Icon name="delivery" size={25} /></span>
           <strong>QuickBite Delivery</strong>
         </div>
 
@@ -78,7 +79,7 @@ function DeliveryLayout({ title, subtitle, children }) {
                   : "delivery-sidebar-link"
               }
             >
-              <span>{item.icon}</span>
+              <Icon name={item.icon} size={21} />
               {item.label}
             </NavLink>
           ))}
@@ -86,7 +87,7 @@ function DeliveryLayout({ title, subtitle, children }) {
 
         <div className="delivery-sidebar-bottom">
           <div className="delivery-sidebar-note">
-            <span>📌</span>
+            <span><Icon name="delivery" size={21} /></span>
 
             <div>
               <strong>Delivery Mode</strong>
@@ -95,7 +96,7 @@ function DeliveryLayout({ title, subtitle, children }) {
           </div>
 
           <button className="delivery-logout-btn" onClick={handleLogout}>
-            <span>🚪</span>
+            <Icon name="login" size={19} />
             Logout
           </button>
         </div>
@@ -130,6 +131,14 @@ function DeliveryLayout({ title, subtitle, children }) {
 
         <section className="delivery-main-content">{children}</section>
       </main>
+      <nav className="delivery-mobile-nav" aria-label="Delivery navigation">
+        {navItems.map((item) => (
+          <NavLink key={item.path} to={item.path} className={({ isActive }) => `delivery-mobile-link${isActive ? " active-delivery-mobile-link" : ""}`}>
+            <Icon name={item.icon} size={21} />
+            <span>{item.label.replace(" Orders", "").replace("My ", "")}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   );
 }
