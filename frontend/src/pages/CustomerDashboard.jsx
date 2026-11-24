@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 
 function CustomerDashboard() {
   const { currentUser } = useAuth();
+  const userId = currentUser.id;
   const navigate = useNavigate();
 
   const [cartItems, setCartItems] = useState([]);
@@ -15,16 +16,14 @@ function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
-      const cartResponse = await api.get(`/cart/${currentUser.id}`);
-      const orderResponse = await api.get(`/orders/customer/${currentUser.id}`);
+      const [cartResponse, orderResponse] = await Promise.all([
+        api.get(`/cart/${userId}`),
+        api.get(`/orders/customer/${userId}`),
+      ]);
 
       setCartItems(cartResponse.data);
       setOrders(orderResponse.data);
@@ -36,7 +35,11 @@ function CustomerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadDashboardData);
+  }, [loadDashboardData]);
 
   const formatCurrency = (amount) => {
     return `Rs. ${Number(amount || 0).toFixed(2)}`;
