@@ -4,6 +4,7 @@ import DeliveryLayout from "../components/DeliveryLayout";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
+import RetryNotice from "../components/RetryNotice";
 import { useAuth } from "../context/AuthContext";
 
 function DeliveryCompletedOrders() {
@@ -81,7 +82,7 @@ function DeliveryCompletedOrders() {
       title="Completed Orders"
       subtitle="Review your successfully delivered customer orders."
     >
-      {message && <div className="error-box">{message}</div>}
+      <RetryNotice message={message} onRetry={loadCompletedOrders} />
 
       {loading ? (
         <LoadingSpinner text="Loading completed orders..." />

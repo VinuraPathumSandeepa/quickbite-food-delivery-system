@@ -4,6 +4,7 @@ import api from "../api/api";
 import DeliveryLayout from "../components/DeliveryLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
+import RetryNotice from "../components/RetryNotice";
 import { useAuth } from "../context/AuthContext";
 
 function DeliveryDashboard() {
@@ -98,7 +99,7 @@ function DeliveryDashboard() {
       title="Delivery Dashboard"
       subtitle="Manage assigned deliveries, update delivery progress, and review completed work."
     >
-      {message && <div className="error-box">{message}</div>}
+      <RetryNotice message={message} onRetry={loadDashboardData} />
 
       {loading ? (
         <LoadingSpinner text="Loading delivery dashboard..." />

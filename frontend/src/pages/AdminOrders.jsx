@@ -6,6 +6,7 @@ import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
 import DialogShell from "../components/DialogShell";
+import RetryNotice from "../components/RetryNotice";
 
 function AdminOrders() {
   const location = useLocation();
@@ -211,7 +212,7 @@ function AdminOrders() {
       title="Manage Orders"
       subtitle="View customer orders, update status, assign delivery persons, and clear completed records."
     >
-      {message && <div className="error-box">{message}</div>}
+      <RetryNotice message={message} onRetry={loadOrders} />
 
       {loading ? (
         <LoadingSpinner text="Loading customer orders..." />

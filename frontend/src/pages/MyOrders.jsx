@@ -7,6 +7,7 @@ import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
 import DialogShell from "../components/DialogShell";
+import RetryNotice from "../components/RetryNotice";
 import { useAuth } from "../context/AuthContext";
 
 function MyOrders() {
@@ -171,7 +172,7 @@ function MyOrders() {
       />
 
       <section className="my-orders-section">
-        {message && <div className="error-box">{message}</div>}
+        <RetryNotice message={message} onRetry={loadOrders} />
 
         {loading ? (
           <LoadingSpinner text="Loading your orders..." />

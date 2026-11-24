@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
+import RetryNotice from "../components/RetryNotice";
 
 function OrderTracking() {
   const { orderId } = useParams();
@@ -118,7 +119,7 @@ function OrderTracking() {
       />
 
       <section className="tracking-section">
-        {message && <div className="error-box">{message}</div>}
+        <RetryNotice message={message} onRetry={loadOrder} />
 
         {loading ? (
           <LoadingSpinner text="Loading order tracking..." />

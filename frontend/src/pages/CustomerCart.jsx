@@ -6,6 +6,7 @@ import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import DialogShell from "../components/DialogShell";
+import RetryNotice from "../components/RetryNotice";
 import { useAuth } from "../context/AuthContext";
 
 function CustomerCart() {
@@ -135,7 +136,7 @@ function CustomerCart() {
       />
 
       <section className="cart-section">
-        {message && <div className="error-box">{message}</div>}
+        <RetryNotice message={message} onRetry={loadCart} />
 
         {loading ? (
           <LoadingSpinner text="Loading cart..." />

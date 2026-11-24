@@ -3,6 +3,7 @@ import api from "../api/api";
 import AdminLayout from "../components/AdminLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
+import RetryNotice from "../components/RetryNotice";
 
 function AdminDashboard() {
   const [orders, setOrders] = useState([]);
@@ -134,7 +135,7 @@ function AdminDashboard() {
       title="Admin Dashboard"
       subtitle="Monitor revenue, orders, sales performance and recent activity."
     >
-      {message && <div className="error-box">{message}</div>}
+      <RetryNotice message={message} onRetry={loadOrders} />
 
       {loading ? (
         <LoadingSpinner text="Loading admin dashboard..." />

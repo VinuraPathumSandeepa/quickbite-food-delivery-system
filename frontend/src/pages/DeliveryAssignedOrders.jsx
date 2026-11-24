@@ -6,6 +6,7 @@ import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
 import DialogShell from "../components/DialogShell";
+import RetryNotice from "../components/RetryNotice";
 import { useAuth } from "../context/AuthContext";
 
 function DeliveryAssignedOrders() {
@@ -193,7 +194,7 @@ function DeliveryAssignedOrders() {
       title="Assigned Orders"
       subtitle="View assigned customer orders, accept deliveries, and update delivery progress."
     >
-      {message && <div className="error-box">{message}</div>}
+      <RetryNotice message={message} onRetry={loadAssignedOrders} />
 
       {loading ? (
         <LoadingSpinner text="Loading assigned orders..." />
