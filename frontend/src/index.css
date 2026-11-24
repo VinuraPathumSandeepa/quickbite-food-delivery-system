@@ -509,15 +509,15 @@ button:disabled {
   display: flex;
   flex: 1;
   flex-direction: column;
-  min-height: 272px;
+  min-height: 264px;
   padding: 24px;
 }
 
 .food-info h3 {
-  margin: 8px 0 10px;
-  min-height: 2.4em;
+  margin: 8px 0;
   color: var(--dark);
   font-size: 22px;
+  line-height: 1.25;
 }
 
 .food-price {
@@ -527,9 +527,9 @@ button:disabled {
 }
 
 .food-description {
+  margin: 0 0 12px;
   color: var(--muted);
   line-height: 1.5;
-  min-height: 48px;
 }
 
 .food-meta {
