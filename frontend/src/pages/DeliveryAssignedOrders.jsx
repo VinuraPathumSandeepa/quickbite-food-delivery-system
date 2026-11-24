@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../api/api";
 import DeliveryLayout from "../components/DeliveryLayout";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
+import DialogShell from "../components/DialogShell";
 import { useAuth } from "../context/AuthContext";
 
 function DeliveryAssignedOrders() {
   const { currentUser } = useAuth();
+  const userId = currentUser.id;
 
   const location = useLocation();
   const highlightedOrderId = new URLSearchParams(location.search).get("orderId");
@@ -32,10 +34,6 @@ function DeliveryAssignedOrders() {
   ];
 
   useEffect(() => {
-    loadAssignedOrders();
-  }, []);
-
-  useEffect(() => {
     if (!loading && highlightedOrderId && orderRefs.current[highlightedOrderId]) {
       setTimeout(() => {
         orderRefs.current[highlightedOrderId].scrollIntoView({
@@ -46,11 +44,11 @@ function DeliveryAssignedOrders() {
     }
   }, [loading, highlightedOrderId, orders]);
 
-  const loadAssignedOrders = async () => {
+  const loadAssignedOrders = useCallback(async () => {
     try {
       setLoading(true);
 
-      const response = await api.get(`/delivery/orders/${currentUser.id}`);
+      const response = await api.get(`/delivery/orders/${userId}`);
 
       const sortedOrders = [...response.data].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -65,7 +63,11 @@ function DeliveryAssignedOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadAssignedOrders);
+  }, [loadAssignedOrders]);
 
   const formatCurrency = (amount) => {
     return `Rs. ${Number(amount || 0).toFixed(2)}`;
@@ -294,8 +296,9 @@ function DeliveryAssignedOrders() {
 
                 {canUpdateStatus(order.status) && (
                   <div>
-                    <label>Update Delivery Status</label>
+                    <label htmlFor={`delivery-status-${order.id}`}>Update Delivery Status</label>
                     <select
+                      id={`delivery-status-${order.id}`}
                       value={order.status}
                       disabled={updatingOrderId === order.id}
                       onChange={(e) =>
@@ -317,10 +320,11 @@ function DeliveryAssignedOrders() {
       )}
 
       {orderToReject && (
-        <div className="confirm-modal-overlay">
+        <DialogShell titleId="reject-delivery-title" onClose={closeRejectModal}>
           <div className="confirm-modal-card reject-delivery-modal">
             <button
               className="confirm-modal-close"
+              aria-label="Close reject delivery dialog"
               onClick={closeRejectModal}
               disabled={rejecting}
             >
@@ -329,7 +333,7 @@ function DeliveryAssignedOrders() {
 
             <div className="confirm-modal-icon reject-delivery-icon">🚚</div>
 
-            <h2>Reject Delivery?</h2>
+            <h2 id="reject-delivery-title">Reject Delivery?</h2>
 
             <p>
               Are you sure you want to reject{" "}
@@ -372,7 +376,7 @@ function DeliveryAssignedOrders() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogShell>
       )}
 
       {toast && (

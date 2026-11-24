@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import DeliveryLayout from "../components/DeliveryLayout";
 import EmptyState from "../components/EmptyState";
@@ -8,21 +8,18 @@ import { useAuth } from "../context/AuthContext";
 
 function DeliveryCompletedOrders() {
   const { currentUser } = useAuth();
+  const userId = currentUser.id;
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    loadCompletedOrders();
-  }, []);
-
-  const loadCompletedOrders = async () => {
+  const loadCompletedOrders = useCallback(async () => {
     try {
       setLoading(true);
 
       const response = await api.get(
-        `/delivery/orders/${currentUser.id}/completed`
+        `/delivery/orders/${userId}/completed`
       );
 
       const sortedOrders = [...response.data].sort(
@@ -40,7 +37,11 @@ function DeliveryCompletedOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadCompletedOrders);
+  }, [loadCompletedOrders]);
 
   const formatCurrency = (amount) => {
     return `Rs. ${Number(amount || 0).toFixed(2)}`;

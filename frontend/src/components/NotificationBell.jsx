@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
+import Icon from "./Icon";
 
 function NotificationBell() {
   const { currentUser } = useAuth();
+  const userId = currentUser?.id;
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState([]);
@@ -12,17 +14,26 @@ function NotificationBell() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      loadNotifications();
-
-      const interval = setInterval(() => {
-        loadNotifications();
-      }, 10000);
-
-      return () => clearInterval(interval);
+  const loadNotifications = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const [notificationResponse, countResponse] = await Promise.all([
+        api.get(`/notifications/user/${userId}`),
+        api.get(`/notifications/user/${userId}/unread-count`),
+      ]);
+      setNotifications(notificationResponse.data);
+      setUnreadCount(countResponse.data.unreadCount || 0);
+    } catch (error) {
+      console.error("Failed to load notifications", error);
     }
-  }, [currentUser?.id]);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return undefined;
+    void Promise.resolve().then(loadNotifications);
+    const interval = setInterval(loadNotifications, 10000);
+    return () => clearInterval(interval);
+  }, [userId, loadNotifications]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -38,23 +49,6 @@ function NotificationBell() {
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const loadNotifications = async () => {
-    try {
-      const notificationResponse = await api.get(
-        `/notifications/user/${currentUser.id}`
-      );
-
-      const countResponse = await api.get(
-        `/notifications/user/${currentUser.id}/unread-count`
-      );
-
-      setNotifications(notificationResponse.data);
-      setUnreadCount(countResponse.data.unreadCount || 0);
-    } catch (error) {
-      console.error("Failed to load notifications", error);
-    }
-  };
 
   const markAsRead = async (notificationId) => {
     try {
@@ -83,11 +77,7 @@ function NotificationBell() {
     }
   };
 
-  const getNotificationIcon = (type) => {
-    if (type === "NEW_ORDER") return "📦";
-    if (type === "DELIVERY_ASSIGNED") return "🚚";
-    return "🔔";
-  };
+  const getNotificationIcon = (type) => type === "NEW_ORDER" ? "orders" : type === "DELIVERY_ASSIGNED" ? "delivery" : "bell";
 
   const getRedirectPath = (notification) => {
     if (notification.type === "NEW_ORDER") {
@@ -129,9 +119,11 @@ function NotificationBell() {
       <button
         className="notification-bell-btn"
         onClick={() => setOpen((previous) => !previous)}
-        title="Notifications"
+        aria-label={`Notifications, ${unreadCount} unread`}
+        aria-expanded={open}
+        aria-controls="notification-dropdown"
       >
-        🔔
+        <Icon name="bell" size={22} />
 
         {unreadCount > 0 && (
           <span className="notification-count">
@@ -141,7 +133,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="notification-dropdown">
+        <div className="notification-dropdown" id="notification-dropdown" role="region" aria-label="Notifications" onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}>
           <div className="notification-dropdown-header">
             <div>
               <h3>Notifications</h3>
@@ -155,7 +147,7 @@ function NotificationBell() {
 
           {notifications.length === 0 ? (
             <div className="notification-empty">
-              <div>🔕</div>
+              <div><Icon name="bell" size={32} /></div>
               <strong>No notifications</strong>
               <p>New updates will appear here.</p>
             </div>
@@ -170,9 +162,13 @@ function NotificationBell() {
                   }
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); handleNotificationClick(notification); } }}
+                  aria-label={`Open notification: ${notification.title}`}
                 >
                   <div className="notification-item-icon">
-                    {getNotificationIcon(notification.type)}
+                    <Icon name={getNotificationIcon(notification.type)} size={20} />
                   </div>
 
                   <div className="notification-item-content">

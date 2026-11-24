@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import DeliveryLayout from "../components/DeliveryLayout";
@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 
 function DeliveryDashboard() {
   const { currentUser } = useAuth();
+  const userId = currentUser.id;
   const navigate = useNavigate();
 
   const [assignedOrders, setAssignedOrders] = useState([]);
@@ -16,25 +17,15 @@ function DeliveryDashboard() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
-      const assignedResponse = await api.get(
-        `/delivery/orders/${currentUser.id}`
-      );
-
-      const activeResponse = await api.get(
-        `/delivery/orders/${currentUser.id}/active`
-      );
-
-      const completedResponse = await api.get(
-        `/delivery/orders/${currentUser.id}/completed`
-      );
+      const [assignedResponse, activeResponse, completedResponse] = await Promise.all([
+        api.get(`/delivery/orders/${userId}`),
+        api.get(`/delivery/orders/${userId}/active`),
+        api.get(`/delivery/orders/${userId}/completed`),
+      ]);
 
       setAssignedOrders(assignedResponse.data);
       setActiveOrders(activeResponse.data);
@@ -47,7 +38,11 @@ function DeliveryDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadDashboardData);
+  }, [loadDashboardData]);
 
   const formatCurrency = (amount) => {
     return `Rs. ${Number(amount || 0).toFixed(2)}`;
