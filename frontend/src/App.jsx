@@ -1,35 +1,34 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-
-import Careers from "./pages/Careers";
-import Contact from "./pages/Contact";
-import Support from "./pages/Support";
-
-import CustomerCart from "./pages/CustomerCart";
-import Checkout from "./pages/Checkout";
-import MyOrders from "./pages/MyOrders";
-import OrderTracking from "./pages/OrderTracking";
-
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminCategories from "./pages/AdminCategories";
-import AdminFoods from "./pages/AdminFoods";
-import AdminCollections from "./pages/AdminCollections";
-import AdminOrders from "./pages/AdminOrders";
-
-import DeliveryDashboard from "./pages/DeliveryDashboard";
-import DeliveryAssignedOrders from "./pages/DeliveryAssignedOrders";
-import DeliveryCompletedOrders from "./pages/DeliveryCompletedOrders";
-
+import LoadingSpinner from "./components/LoadingSpinner";
 import ProtectedRoute from "./components/ProtectedRoute";
+
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Careers = lazy(() => import("./pages/Careers"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Support = lazy(() => import("./pages/Support"));
+const CustomerCart = lazy(() => import("./pages/CustomerCart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const MyOrders = lazy(() => import("./pages/MyOrders"));
+const OrderTracking = lazy(() => import("./pages/OrderTracking"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminCategories = lazy(() => import("./pages/AdminCategories"));
+const AdminFoods = lazy(() => import("./pages/AdminFoods"));
+const AdminCollections = lazy(() => import("./pages/AdminCollections"));
+const AdminOrders = lazy(() => import("./pages/AdminOrders"));
+const DeliveryDashboard = lazy(() => import("./pages/DeliveryDashboard"));
+const DeliveryAssignedOrders = lazy(() => import("./pages/DeliveryAssignedOrders"));
+const DeliveryCompletedOrders = lazy(() => import("./pages/DeliveryCompletedOrders"));
 
 function App() {
   return (
-    <Routes>
+    <Suspense fallback={<LoadingSpinner text="Loading page..." />}>
+      <Routes>
       {/* Public Pages */}
       <Route path="/" element={<Home />} />
       <Route path="/menu" element={<Menu />} />
@@ -171,7 +170,8 @@ function App() {
           </ProtectedRoute>
         }
       />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }
 
