@@ -5,6 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>
+    <script>
+      const apiBaseUrl = "%VITE_API_BASE_URL%";
+      if (
+        apiBaseUrl &&
+        !apiBaseUrl.startsWith("%") &&
+        (location.pathname === "/" || location.pathname === "/menu" || location.pathname === "/menu/")
+      ) {
+        const foodPreload = document.createElement("link");
+        foodPreload.rel = "preload";
+        foodPreload.as = "fetch";
+        foodPreload.crossOrigin = "anonymous";
+        foodPreload.href = `${apiBaseUrl.replace(/\/$/, "")}/foods/available`;
+        document.head.append(foodPreload);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
