@@ -22,12 +22,12 @@ function Contact() {
           <div className="resource-info-grid">
             <div>
               <h3>Email</h3>
-              <p>support@fooddelivery.com</p>
+              <p><a href="mailto:support@fooddelivery.com">support@fooddelivery.com</a></p>
             </div>
 
             <div>
               <h3>Phone</h3>
-              <p>+94 71 123 4567</p>
+              <p><a href="tel:+94711234567">+94 71 123 4567</a></p>
             </div>
 
             <div>

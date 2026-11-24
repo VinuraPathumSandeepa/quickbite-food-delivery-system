@@ -104,8 +104,6 @@ function Home() {
   const displayCollections =
     collections.length > 0 ? collections : defaultCollections;
 
-  const scrollingCollections = [...displayCollections, ...displayCollections];
-
   const footer = footerSettings || defaultFooterSettings;
 
   const renderFooterLink = (label, url) => {
@@ -216,12 +214,12 @@ function Home() {
           <p>All our best meals in one delicious place</p>
         </div>
 
-        <div className="collection-marquee-wrapper">
+        <div className="collection-marquee-wrapper" role="region" aria-label="Top Collections" tabIndex={0}>
           <div className="collection-marquee-track">
-            {scrollingCollections.map((collection, index) => (
+            {displayCollections.map((collection) => (
               <div
                 className="collection-card collection-marquee-card"
-                key={`${collection.id}-${index}`}
+                key={collection.id}
               >
                 <img
                   src={foodImageSource(collection.imageUrl)}

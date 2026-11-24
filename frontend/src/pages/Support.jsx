@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import PageHeader from "../components/PageHeader";
+import { Link } from "react-router-dom";
 
 function Support() {
   return (
@@ -39,6 +40,7 @@ function Support() {
           <div className="contact-note-box">
             <h3>Need Quick Help?</h3>
             <p>Contact us through email or phone for faster support.</p>
+            <Link to="/contact" className="solid-btn resource-action">Contact support</Link>
           </div>
         </div>
       </section>

@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import PageHeader from "../components/PageHeader";
+import { Link } from "react-router-dom";
 
 function Careers() {
   return (
@@ -36,6 +37,7 @@ function Careers() {
               <p>Support food preparation, menu updates, and order processing.</p>
             </div>
           </div>
+          <Link to="/contact" className="solid-btn resource-action">Ask about opportunities</Link>
         </div>
       </section>
     </div>

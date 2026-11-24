@@ -78,6 +78,23 @@ img { height: auto; }
 .admin-main-header h1, .delivery-main-header h1 { letter-spacing: -.045em; }
 .admin-stat-card strong { font-size: clamp(26px, 2.3vw, 34px); overflow-wrap: anywhere; }
 .delivery-mobile-nav { display: none; }
+.collection-marquee-wrapper { overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #d6dce3 transparent; }
+.collection-marquee-wrapper::before, .collection-marquee-wrapper::after { display: none; }
+.collection-marquee-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; animation: none; }
+.collection-marquee-card { min-width: 0; max-width: none; cursor: default; scroll-snap-align: start; }
+.collection-marquee-card:hover { transform: none; }
+.footer { border-radius: 0; padding: 54px clamp(24px, 5vw, 80px); gap: 36px; }
+.footer h4 { margin: 6px 0 20px; }
+.footer a { width: fit-content; line-height: 1.4; }
+.footer a:hover { color: #fff; text-decoration: underline; text-underline-offset: 4px; }
+.resource-page-section { padding: 38px clamp(20px, 5vw, 80px) 64px; background: #f7f8fa; }
+.resource-card { max-width: 1200px; margin: 0 auto; border-radius: var(--radius-card); padding: clamp(24px, 4vw, 44px); }
+.resource-card h2 { font-size: clamp(26px, 3vw, 34px); letter-spacing: -.04em; }
+.resource-info-grid { gap: 14px; }
+.resource-info-grid > div, .contact-note-box { border-radius: 16px; background: #fafbfc; }
+.resource-info-grid a { color: var(--primary-dark); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.resource-action { min-height: 44px; margin-top: 22px; border-radius: 12px; }
+.contact-note-box .resource-action { margin-top: 4px; }
 
 @media (max-width: 1000px) {
   .navbar { flex-wrap: nowrap; height: 72px; padding: 0 22px; }
@@ -199,6 +216,13 @@ img { height: auto; }
   .delivery-stat-card h3 { font-size: 13px; }
   .delivery-stat-card strong { font-size: 25px; }
   .delivery-stat-card p { font-size: 12px; }
+  .collection-marquee-track { display: flex; gap: 14px; width: max-content; }
+  .collection-marquee-card { width: min(78vw, 310px); flex: none; }
+  .resource-page-section { padding: 24px 18px 42px; }
+  .resource-card { padding: 24px 20px; }
+  .resource-info-grid { margin-top: 22px; }
+  .resource-info-grid > div, .contact-note-box { padding: 18px; }
+  .footer { gap: 26px; padding: 38px 22px 76px; }
 }
 
 @media (min-width: 700px) and (max-width: 900px) {
