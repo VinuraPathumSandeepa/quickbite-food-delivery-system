@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../api/api";
 import AdminLayout from "../components/AdminLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -25,11 +25,7 @@ function AdminCollections() {
     active: "true",
   });
 
-  useEffect(() => {
-    loadCollections();
-  }, []);
-
-  const loadCollections = async () => {
+  const loadCollections = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get("/collections/admin/all");
@@ -41,7 +37,11 @@ function AdminCollections() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadCollections);
+  }, [loadCollections]);
 
   const handleChange = (e) => {
     setFormData((previous) => ({
@@ -170,8 +170,9 @@ function AdminCollections() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <label>Collection Title</label>
+            <label htmlFor="admincollections-title">Collection Title</label>
             <input
+              id="admincollections-title"
               className={errors.title ? "input-error" : ""}
               type="text"
               name="title"
@@ -183,8 +184,9 @@ function AdminCollections() {
               <span className="field-error">{errors.title}</span>
             )}
 
-            <label>Description</label>
+            <label htmlFor="admincollections-description">Description</label>
             <textarea
+              id="admincollections-description"
               className={errors.description ? "input-error" : ""}
               name="description"
               placeholder="Example: Fresh and healthy food options"
@@ -195,8 +197,9 @@ function AdminCollections() {
               <span className="field-error">{errors.description}</span>
             )}
 
-            <label>Image URL</label>
+            <label htmlFor="admincollections-imageUrl">Image URL</label>
             <input
+              id="admincollections-imageUrl"
               className={errors.imageUrl ? "input-error" : ""}
               type="text"
               name="imageUrl"
@@ -208,8 +211,9 @@ function AdminCollections() {
               <span className="field-error">{errors.imageUrl}</span>
             )}
 
-            <label>Display Order</label>
+            <label htmlFor="admincollections-displayOrder">Display Order</label>
             <input
+              id="admincollections-displayOrder"
               className={errors.displayOrder ? "input-error" : ""}
               type="number"
               name="displayOrder"
@@ -221,8 +225,9 @@ function AdminCollections() {
               <span className="field-error">{errors.displayOrder}</span>
             )}
 
-            <label>Status</label>
+            <label htmlFor="admincollections-active">Status</label>
             <select
+              id="admincollections-active"
               name="active"
               value={formData.active}
               onChange={handleChange}

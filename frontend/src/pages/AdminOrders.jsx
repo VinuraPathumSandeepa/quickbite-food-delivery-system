@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../api/api";
 import AdminLayout from "../components/AdminLayout";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
+import DialogShell from "../components/DialogShell";
 
 function AdminOrders() {
   const location = useLocation();
@@ -35,11 +36,6 @@ function AdminOrders() {
   ];
 
   useEffect(() => {
-    loadOrders();
-    loadDeliveryPersons();
-  }, []);
-
-  useEffect(() => {
     if (!loading && highlightedOrderId && orderRefs.current[highlightedOrderId]) {
       setTimeout(() => {
         orderRefs.current[highlightedOrderId].scrollIntoView({
@@ -50,7 +46,7 @@ function AdminOrders() {
     }
   }, [loading, highlightedOrderId, orders]);
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -67,16 +63,23 @@ function AdminOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadDeliveryPersons = async () => {
+  const loadDeliveryPersons = useCallback(async () => {
     try {
       const response = await api.get("/delivery/persons");
       setDeliveryPersons(response.data);
     } catch (error) {
       console.error("Failed to load delivery persons", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void Promise.resolve().then(() => {
+      loadOrders();
+      loadDeliveryPersons();
+    });
+  }, [loadOrders, loadDeliveryPersons]);
 
   const showToast = (toastData) => {
     setToast(toastData);
@@ -295,8 +298,9 @@ function AdminOrders() {
 
               <div className="admin-order-actions">
                 <div>
-                  <label>Update Status</label>
+                  <label htmlFor={`admin-order-status-${order.id}`}>Update Status</label>
                   <select
+                    id={`admin-order-status-${order.id}`}
                     value={order.status}
                     onChange={(e) =>
                       updateOrderStatus(order.id, e.target.value)
@@ -313,8 +317,9 @@ function AdminOrders() {
                 {canAssignDelivery(order) ? (
                   <>
                     <div>
-                      <label>Assign Delivery Person</label>
+                      <label htmlFor={`admin-order-driver-${order.id}`}>Assign Delivery Person</label>
                       <select
+                        id={`admin-order-driver-${order.id}`}
                         value={selectedDeliveryPerson[order.id] || ""}
                         onChange={(e) =>
                           handleDeliverySelect(order.id, e.target.value)
@@ -364,10 +369,11 @@ function AdminOrders() {
       )}
 
       {orderToDelete && (
-        <div className="confirm-modal-overlay">
+        <DialogShell titleId="delete-order-title" onClose={closeDeleteModal}>
           <div className="confirm-modal-card">
             <button
               className="confirm-modal-close"
+              aria-label="Close delete order dialog"
               onClick={closeDeleteModal}
               disabled={deleting}
             >
@@ -376,7 +382,7 @@ function AdminOrders() {
 
             <div className="confirm-modal-icon">🗑️</div>
 
-            <h2>Delete Order Record?</h2>
+            <h2 id="delete-order-title">Delete Order Record?</h2>
 
             <p>
               Are you sure you want to permanently delete{" "}
@@ -402,7 +408,7 @@ function AdminOrders() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogShell>
       )}
 
       {toast && (

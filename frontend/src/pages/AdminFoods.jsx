@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../api/api";
 import AdminLayout from "../components/AdminLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -29,12 +29,7 @@ function AdminFoods() {
     categoryId: "",
   });
 
-  useEffect(() => {
-    loadFoods();
-    loadCategories();
-  }, []);
-
-  const loadFoods = async () => {
+  const loadFoods = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get("/foods");
@@ -45,16 +40,23 @@ function AdminFoods() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const response = await api.get("/categories");
       setCategories(response.data);
     } catch (error) {
       console.error("Failed to load categories", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void Promise.resolve().then(() => {
+      loadFoods();
+      loadCategories();
+    });
+  }, [loadFoods, loadCategories]);
 
   const handleChange = (e) => {
     setFormData((previous) => ({
@@ -192,8 +194,9 @@ function AdminFoods() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <label>Food Name</label>
+            <label htmlFor="adminfoods-name">Food Name</label>
             <input
+              id="adminfoods-name"
               className={errors.name ? "input-error" : ""}
               type="text"
               name="name"
@@ -203,8 +206,9 @@ function AdminFoods() {
             />
             {errors.name && <span className="field-error">{errors.name}</span>}
 
-            <label>Description</label>
+            <label htmlFor="adminfoods-description">Description</label>
             <textarea
+              id="adminfoods-description"
               className={errors.description ? "input-error" : ""}
               name="description"
               placeholder="Enter description"
@@ -215,8 +219,9 @@ function AdminFoods() {
               <span className="field-error">{errors.description}</span>
             )}
 
-            <label>Price</label>
+            <label htmlFor="adminfoods-price">Price</label>
             <input
+              id="adminfoods-price"
               className={errors.price ? "input-error" : ""}
               type="number"
               name="price"
@@ -228,8 +233,9 @@ function AdminFoods() {
               <span className="field-error">{errors.price}</span>
             )}
 
-            <label>Image URL</label>
+            <label htmlFor="adminfoods-imageUrl">Image URL</label>
             <input
+              id="adminfoods-imageUrl"
               type="text"
               name="imageUrl"
               placeholder="Paste food image URL"
@@ -237,8 +243,9 @@ function AdminFoods() {
               onChange={handleChange}
             />
 
-            <label>Rating</label>
+            <label htmlFor="adminfoods-rating">Rating</label>
             <input
+              id="adminfoods-rating"
               className={errors.rating ? "input-error" : ""}
               type="number"
               step="0.1"
@@ -252,8 +259,9 @@ function AdminFoods() {
               <span className="field-error">{errors.rating}</span>
             )}
 
-            <label>Preparation Time Minutes</label>
+            <label htmlFor="adminfoods-preparationTimeMinutes">Preparation Time Minutes</label>
             <input
+              id="adminfoods-preparationTimeMinutes"
               className={errors.preparationTimeMinutes ? "input-error" : ""}
               type="number"
               name="preparationTimeMinutes"
@@ -267,8 +275,9 @@ function AdminFoods() {
               </span>
             )}
 
-            <label>Available</label>
+            <label htmlFor="adminfoods-available">Available</label>
             <select
+              id="adminfoods-available"
               name="available"
               value={formData.available}
               onChange={handleChange}
@@ -277,8 +286,9 @@ function AdminFoods() {
               <option value="false">Not Available</option>
             </select>
 
-            <label>Category</label>
+            <label htmlFor="adminfoods-categoryId">Category</label>
             <select
+              id="adminfoods-categoryId"
               className={errors.categoryId ? "input-error" : ""}
               name="categoryId"
               value={formData.categoryId}

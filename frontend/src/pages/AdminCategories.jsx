@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../api/api";
 import AdminLayout from "../components/AdminLayout";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -21,11 +21,7 @@ function AdminCategories() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get("/categories");
@@ -36,7 +32,11 @@ function AdminCategories() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadCategories);
+  }, [loadCategories]);
 
   const handleChange = (e) => {
     setFormData((previous) => ({
@@ -150,8 +150,9 @@ function AdminCategories() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <label>Category Name</label>
+            <label htmlFor="admincategories-name">Category Name</label>
             <input
+              id="admincategories-name"
               className={errors.name ? "input-error" : ""}
               type="text"
               name="name"
@@ -161,8 +162,9 @@ function AdminCategories() {
             />
             {errors.name && <span className="field-error">{errors.name}</span>}
 
-            <label>Description</label>
+            <label htmlFor="admincategories-description">Description</label>
             <textarea
+              id="admincategories-description"
               className={errors.description ? "input-error" : ""}
               name="description"
               placeholder="Enter description"
