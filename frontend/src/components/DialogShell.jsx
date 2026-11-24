@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-function DialogShell({ titleId, onClose, children }) {
+function DialogShell({ titleId, onClose, children, className = "confirm-modal-overlay" }) {
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ function DialogShell({ titleId, onClose, children }) {
   };
 
   return (
-    <div ref={dialogRef} className="confirm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={handleKeyDown} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div ref={dialogRef} className={className} role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={handleKeyDown} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       {children}
     </div>
   );

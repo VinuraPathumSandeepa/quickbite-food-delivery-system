@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
+import DialogShell from "./DialogShell";
 
 function FoodCard({ food }) {
   const { currentUser } = useAuth();
@@ -107,17 +108,16 @@ function FoodCard({ food }) {
             <span>{food.preparationTimeMinutes || 20} mins</span>
           </div>
 
-          <button className="small-order-btn" onClick={addToCart}>
-            {currentUser ? "Add to Cart" : "Add to Cart"}
-          </button>
+          <button type="button" className="small-order-btn" onClick={addToCart}>Add to Cart</button>
         </div>
       </div>
 
       {showLoginPrompt && (
-        <div className="login-prompt-overlay">
+        <DialogShell className="login-prompt-overlay" titleId={`login-required-${food.id}`} onClose={() => setShowLoginPrompt(false)}>
           <div className="login-prompt-card">
             <button
               className="login-prompt-close"
+              aria-label="Close login prompt"
               onClick={() => setShowLoginPrompt(false)}
             >
               ✕
@@ -125,7 +125,7 @@ function FoodCard({ food }) {
 
             <div className="login-prompt-icon">🛒</div>
 
-            <h2>Login Required</h2>
+            <h2 id={`login-required-${food.id}`}>Login Required</h2>
 
             <p>
               Please login or create an account to add food items to your cart
@@ -145,12 +145,12 @@ function FoodCard({ food }) {
               </button>
             </div>
           </div>
-        </div>
+        </DialogShell>
       )}
 
       {toast && (
-        <div className={`cart-toast ${toast.type === "success" ? "cart-toast-success" : "cart-toast-error"}`}>
-          <button className="cart-toast-close" onClick={() => setToast(null)}>
+        <div className={`cart-toast ${toast.type === "success" ? "cart-toast-success" : "cart-toast-error"}`} role="status">
+          <button className="cart-toast-close" aria-label="Dismiss notification" onClick={() => setToast(null)}>
             ✕
           </button>
 

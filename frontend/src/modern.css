@@ -27,6 +27,8 @@ img { height: auto; }
 .error-box { border: 1px solid #e8a49a; }
 .success-box { border: 1px solid #9ddbb2; }
 .field-error { color: #b8321d; }
+.retry-notice { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.retry-notice .outline-btn { min-height: 42px; border-radius: 11px; }
 
 .navbar { height: 78px; padding-inline: clamp(24px, 4vw, 72px); gap: 24px; }
 .brand { font-size: 25px; letter-spacing: -.055em; white-space: nowrap; }
@@ -86,7 +88,7 @@ img { height: auto; }
   .admin-layout-page, .delivery-layout-page { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .app-page { padding-bottom: calc(66px + env(safe-area-inset-bottom)); }
   .navbar { height: 64px; padding: 0 18px; align-items: center; position: sticky; }
   .brand { font-size: 23px; }
@@ -189,12 +191,20 @@ img { height: auto; }
   .delivery-hero-card h1 { font-size: 32px; }
   .delivery-hero-card p { font-size: 15px; margin: 0; }
   .delivery-hero-actions { margin-top: 20px; gap: 8px; }
-  .delivery-profile-mini-card { padding: 18px; }
+  .delivery-profile-mini-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px; }
+  .delivery-profile-mini-card > .delivery-profile-icon, .delivery-profile-mini-card > h3, .delivery-profile-mini-card > p { display: none; }
+  .delivery-profile-row { min-width: 0; margin: 0; padding: 11px; overflow-wrap: anywhere; }
   .delivery-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .delivery-stat-card { padding: 17px; min-width: 0; }
   .delivery-stat-card h3 { font-size: 13px; }
   .delivery-stat-card strong { font-size: 25px; }
   .delivery-stat-card p { font-size: 12px; }
+}
+
+@media (min-width: 700px) and (max-width: 900px) {
+  .cart-item-card { grid-template-columns: minmax(0, 1fr) 190px; }
+  .cart-food-left { flex-direction: row; align-items: center; }
+  .cart-food-image { width: 165px; height: 132px; }
 }
 
 @media (max-width: 380px) {
