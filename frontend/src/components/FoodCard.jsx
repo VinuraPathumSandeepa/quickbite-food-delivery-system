@@ -11,6 +11,11 @@ function FoodCard({ food }) {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
+  const imageFocusClass = /\bburger\b/i.test(food.name)
+    ? "food-image-wrap-burger"
+    : /\b(koththu|kottu)\b/i.test(food.name)
+      ? "food-image-wrap-kottu"
+      : "";
 
   useEffect(() => {
     return () => {
@@ -79,7 +84,7 @@ function FoodCard({ food }) {
   return (
     <>
       <div className="food-card">
-        <div className="food-image-wrap">
+        <div className={`food-image-wrap ${imageFocusClass}`}>
           <img
             src={foodImageSource(food.imageUrl)}
             alt={food.name}

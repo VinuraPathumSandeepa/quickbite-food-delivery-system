@@ -486,8 +486,6 @@ button:disabled {
 .food-image-wrap {
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border: 6px solid #ffffff;
-  border-radius: 28px 28px 0 0;
   background: #fff7f2;
 }
 
@@ -495,9 +493,16 @@ button:disabled {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  background: #fff7f2;
+}
+
+.food-image-wrap-burger .food-image {
+  object-position: center 57%;
+}
+
+.food-image-wrap-kottu .food-image {
+  object-position: center 45%;
 }
 
 .food-info {
@@ -570,9 +575,8 @@ button:disabled {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  background: #fff7f2;
 }
 
 .collection-card h3 {
