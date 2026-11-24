@@ -1552,6 +1552,15 @@ textarea:focus {
   color: var(--danger);
 }
 
+.catalog-filter-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
 .success-box {
   background: var(--success-bg);
   color: var(--success);

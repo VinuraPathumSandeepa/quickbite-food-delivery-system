@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
 import FoodCard from "../components/FoodCard";
 import LoadingSpinner from "../components/LoadingSpinner";
+import EmptyState from "../components/EmptyState";
 import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 
 function Home() {
@@ -11,6 +12,7 @@ function Home() {
   const [collections, setCollections] = useState([]);
   const [footerSettings, setFooterSettings] = useState(null);
   const [loadingFoods, setLoadingFoods] = useState(true);
+  const [featuredError, setFeaturedError] = useState("");
 
   const defaultCollections = [
     {
@@ -54,43 +56,50 @@ function Home() {
     copyrightText: "© 2026 QuickBite. All rights reserved.",
   };
 
-  useEffect(() => {
-    loadFeaturedFoods();
-    loadCollections();
-    loadFooterSettings();
+  const loadFeaturedFoods = useCallback(() => {
+    api.get("/foods/available", { timeout: 20000 })
+      .then((response) => {
+        if (!Array.isArray(response.data)) throw new Error("Invalid food response");
+        setFeaturedFoods(response.data.slice(0, 6));
+      })
+      .catch((error) => {
+        console.error("Failed to load featured foods", error);
+        setFeaturedFoods([]);
+        setFeaturedError("We couldn't load featured meals. Please try again.");
+      })
+      .finally(() => setLoadingFoods(false));
   }, []);
 
-  const loadFeaturedFoods = async () => {
-    try {
-      setLoadingFoods(true);
-
-      const response = await api.get("/foods/available");
-      setFeaturedFoods(response.data.slice(0, 6));
-    } catch (error) {
-      console.error("Failed to load featured foods", error);
-    } finally {
-      setLoadingFoods(false);
-    }
+  const retryFeaturedFoods = () => {
+    setLoadingFoods(true);
+    setFeaturedError("");
+    loadFeaturedFoods();
   };
 
-  const loadCollections = async () => {
-    try {
-      const response = await api.get("/collections");
-      setCollections(response.data);
-    } catch (error) {
-      console.error("Failed to load collections", error);
-    }
-  };
+  useEffect(() => {
+    loadFeaturedFoods();
 
-  const loadFooterSettings = async () => {
-    try {
-      const response = await api.get("/footer-settings");
-      setFooterSettings(response.data);
-    } catch (error) {
-      console.error("Failed to load footer settings", error);
-      setFooterSettings(defaultFooterSettings);
-    }
-  };
+    const loadCollections = async () => {
+      try {
+        const response = await api.get("/collections", { timeout: 20000 });
+        if (Array.isArray(response.data)) setCollections(response.data);
+      } catch (error) {
+        console.error("Failed to load collections", error);
+      }
+    };
+
+    const loadFooterSettings = async () => {
+      try {
+        const response = await api.get("/footer-settings", { timeout: 20000 });
+        setFooterSettings(response.data);
+      } catch (error) {
+        console.error("Failed to load footer settings", error);
+      }
+    };
+
+    loadCollections();
+    loadFooterSettings();
+  }, [loadFeaturedFoods]);
 
   const displayCollections =
     collections.length > 0 ? collections : defaultCollections;
@@ -170,11 +179,22 @@ function Home() {
 
         {loadingFoods ? (
           <LoadingSpinner text="Loading featured meals..." />
+        ) : featuredError ? (
+          <EmptyState
+            icon="⚠️"
+            title="Featured meals are unavailable"
+            text={featuredError}
+            actionText="Try again"
+            onAction={retryFeaturedFoods}
+          />
         ) : featuredFoods.length === 0 ? (
-          <div className="empty-box">
-            <h2>No food items available</h2>
-            <p>Food items added by admin will appear here.</p>
-          </div>
+          <EmptyState
+            icon="🍽️"
+            title="No food items available"
+            text="Food items added by admin will appear here."
+            actionText="Check again"
+            onAction={retryFeaturedFoods}
+          />
         ) : (
           <div className="food-grid">
             {featuredFoods.map((food) => (

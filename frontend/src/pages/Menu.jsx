@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
 import PageHeader from "../components/PageHeader";
@@ -17,28 +17,50 @@ function Menu() {
 
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
+  const [foodError, setFoodError] = useState("");
+  const [categoryError, setCategoryError] = useState("");
 
-  useEffect(() => {
-    loadMenuData();
+  const loadFoods = useCallback(() => {
+    api.get("/foods/available", { timeout: 20000 })
+      .then((response) => {
+        if (!Array.isArray(response.data)) throw new Error("Invalid food response");
+        setFoods(response.data);
+      })
+      .catch((error) => {
+        console.error("Failed to load menu foods", error);
+        setFoods([]);
+        setFoodError("We couldn't load the menu. Please try again.");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const loadMenuData = async () => {
-    try {
-      setLoading(true);
+  const loadCategories = useCallback(() => {
+    api.get("/categories", { timeout: 20000 })
+      .then((response) => {
+        if (!Array.isArray(response.data)) throw new Error("Invalid category response");
+        setCategories(response.data);
+      })
+      .catch((error) => {
+        console.error("Failed to load categories", error);
+        setCategoryError("Categories are unavailable. You can still browse all meals.");
+      });
+  }, []);
 
-      const foodResponse = await api.get("/foods/available");
-      const categoryResponse = await api.get("/categories");
-
-      setFoods(foodResponse.data);
-      setCategories(categoryResponse.data);
-      setMessage("");
-    } catch (error) {
-      setMessage(error.response?.data?.message || "Failed to load menu.");
-    } finally {
-      setLoading(false);
-    }
+  const retryFoods = () => {
+    setLoading(true);
+    setFoodError("");
+    loadFoods();
   };
+
+  const retryCategories = () => {
+    setCategoryError("");
+    loadCategories();
+  };
+
+  useEffect(() => {
+    loadFoods();
+    loadCategories();
+  }, [loadFoods, loadCategories]);
 
   const searchSuggestions = useMemo(() => {
     if (!searchTerm.trim()) return [];
@@ -138,7 +160,9 @@ function Menu() {
               <h2>Find your perfect meal</h2>
             </div>
 
-            <div className="results-count">{filteredFoods.length} items found</div>
+            <div className="results-count">
+              {loading ? "Loading items..." : foodError ? "Items unavailable" : `${filteredFoods.length} items found`}
+            </div>
           </div>
 
           <div className="search-suggestion-wrapper">
@@ -288,17 +312,41 @@ function Menu() {
               </div>
             </div>
           </div>
+          {categoryError && (
+            <div className="error-box catalog-filter-error" role="alert">
+              <span>{categoryError}</span>
+              <button type="button" className="outline-btn" onClick={retryCategories}>
+                Retry categories
+              </button>
+            </div>
+          )}
         </div>
-
-        {message && <div className="error-box">{message}</div>}
 
         {loading ? (
           <LoadingSpinner text="Loading menu..." />
+        ) : foodError ? (
+          <EmptyState
+            icon="⚠️"
+            title="Menu is unavailable"
+            text={foodError}
+            actionText="Try again"
+            onAction={retryFoods}
+          />
+        ) : foods.length === 0 ? (
+          <EmptyState
+            icon="🍽️"
+            title="No meals available"
+            text="Please check back soon for new meals."
+            actionText="Check again"
+            onAction={retryFoods}
+          />
         ) : filteredFoods.length === 0 ? (
           <EmptyState
             icon="🍽️"
             title="No food items found"
             text="Try another search keyword or clear the filters."
+            actionText="Clear filters"
+            onAction={clearFilters}
           />
         ) : (
           <div className="food-grid">
