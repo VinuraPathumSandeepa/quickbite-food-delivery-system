@@ -94,7 +94,7 @@ function DeliveryCompletedOrders() {
         />
       ) : (
         <>
-          <div className="delivery-stats-grid">
+          <div className="delivery-stats-grid delivery-completed-stats-grid">
             <div className="delivery-stat-card">
               <div className="delivery-stat-icon">✅</div>
               <h3>Total Completed</h3>

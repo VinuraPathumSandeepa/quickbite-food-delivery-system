@@ -223,6 +223,7 @@ img { height: auto; }
   .delivery-profile-mini-card > .delivery-profile-icon, .delivery-profile-mini-card > h3, .delivery-profile-mini-card > p { display: none; }
   .delivery-profile-row { min-width: 0; margin: 0; padding: 11px; overflow-wrap: anywhere; }
   .delivery-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .delivery-completed-stats-grid > :last-child { grid-column: 1 / -1; }
   .delivery-stat-card { padding: 17px; min-width: 0; }
   .delivery-stat-card h3 { font-size: 13px; }
   .delivery-stat-card strong { font-size: 25px; }
