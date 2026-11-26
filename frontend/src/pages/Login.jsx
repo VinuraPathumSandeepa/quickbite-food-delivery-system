@@ -9,7 +9,7 @@ import {
 } from "../utils/validation";
 
 function Login() {
-  const { currentUser, loginUser } = useAuth();
+  const { currentUser, authReady, loginUser } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -70,7 +70,7 @@ function Login() {
     }
   };
 
-  if (currentUser) {
+  if (authReady && currentUser) {
     return <Navigate to={getLandingPath(currentUser.role)} replace />;
   }
 

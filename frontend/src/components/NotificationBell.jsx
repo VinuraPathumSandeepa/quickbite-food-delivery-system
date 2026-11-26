@@ -13,6 +13,8 @@ function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [mobileTop, setMobileTop] = useState(68);
   const [mobileMaxHeight, setMobileMaxHeight] = useState(520);
   const [isMobile, setIsMobile] = useState(() =>
@@ -25,6 +27,7 @@ function NotificationBell() {
 
   const loadNotifications = useCallback(async () => {
     if (!userId) return;
+    setLoading(true);
     try {
       const [notificationResponse, countResponse] = await Promise.all([
         api.get(`/notifications/user/${userId}`),
@@ -32,17 +35,25 @@ function NotificationBell() {
       ]);
       setNotifications(notificationResponse.data);
       setUnreadCount(countResponse.data.unreadCount || 0);
+      setLoadError(false);
     } catch (error) {
       console.error("Failed to load notifications", error);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
   }, [userId]);
 
   useEffect(() => {
     if (!userId) return undefined;
     void Promise.resolve().then(loadNotifications);
-    const interval = setInterval(loadNotifications, 10000);
+    const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
   }, [userId, loadNotifications]);
+
+  useEffect(() => {
+    if (open) void Promise.resolve().then(loadNotifications);
+  }, [open, loadNotifications]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 900px)");
@@ -135,6 +146,12 @@ function NotificationBell() {
       return `/delivery/assigned-orders?orderId=${notification.relatedOrderId}`;
     }
 
+    if (currentUser?.role === "CUSTOMER") {
+      return notification.relatedOrderId
+        ? `/customer/orders/${notification.relatedOrderId}/track`
+        : "/customer/orders";
+    }
+
     if (currentUser?.role === "ADMIN") {
       return "/admin/dashboard";
     }
@@ -223,7 +240,14 @@ function NotificationBell() {
           ✕
         </button>
       </div>
-      {notifications.length === 0 ? (
+      {loadError ? (
+        <div className="notification-empty" role="alert">
+          <strong>Could not load notifications</strong>
+          <button type="button" onClick={loadNotifications}>Retry</button>
+        </div>
+      ) : loading && notifications.length === 0 ? (
+        <div className="notification-empty" role="status">Loading notifications...</div>
+      ) : notifications.length === 0 ? (
         <div className="notification-empty">
           <div><Icon name="bell" size={32} /></div>
           <strong>No notifications</strong>

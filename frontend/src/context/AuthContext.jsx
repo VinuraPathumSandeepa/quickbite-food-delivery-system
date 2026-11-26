@@ -1,87 +1,84 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../api/api";
-import { readStoredUser } from "./session";
+import { clearSession, isValidUser, readStoredSession, saveSession } from "./session";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(readStoredUser);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    const restoreSession = (event) => {
-      if (event.persisted) setCurrentUser(readStoredUser());
+    let active = true;
+    const restore = async () => {
+      const session = readStoredSession();
+      if (!session) {
+        if (active) { setCurrentUser(null); setAuthReady(true); }
+        return;
+      }
+      try {
+        const response = await api.get("/auth/me");
+        if (!isValidUser(response.data) || response.data.id !== session.user.id ||
+            response.data.role !== session.user.role) throw new Error("Session changed");
+        if (active) setCurrentUser(response.data);
+      } catch {
+        clearSession();
+        if (active) setCurrentUser(null);
+      } finally {
+        if (active) setAuthReady(true);
+      }
     };
-    const syncStorage = (event) => {
-      if (event.key === "foodUser") setCurrentUser(readStoredUser());
-    };
-
-    window.addEventListener("pageshow", restoreSession);
-    window.addEventListener("storage", syncStorage);
+    const expire = () => { setCurrentUser(null); setAuthReady(true); };
+    const pageShow = (event) => { if (event.persisted) void restore(); };
+    window.addEventListener("quickbite:session-expired", expire);
+    window.addEventListener("pageshow", pageShow);
+    void restore();
     return () => {
-      window.removeEventListener("pageshow", restoreSession);
-      window.removeEventListener("storage", syncStorage);
+      active = false;
+      window.removeEventListener("quickbite:session-expired", expire);
+      window.removeEventListener("pageshow", pageShow);
     };
   }, []);
 
-  const registerUser = async (formData) => {
-    const response = await api.post("/auth/register", formData);
-    return response.data;
-  };
+  useEffect(() => {
+    if (!currentUser) return undefined;
+    const session = readStoredSession();
+    if (!session) return undefined;
+    const timer = window.setTimeout(() => {
+      clearSession();
+      setCurrentUser(null);
+    }, Math.max(0, Date.parse(session.expiresAt) - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [currentUser]);
+
+  const registerUser = async (formData) => (await api.post("/auth/register", formData)).data;
 
   const loginUser = async (email, password) => {
-    const response = await api.post("/auth/login", {
-      email,
-      password,
-    });
-
-    const userData = response.data;
-
-    localStorage.setItem("foodUser", JSON.stringify(userData));
-    setCurrentUser(userData);
-
-    return userData;
+    const response = await api.post("/auth/login", { email, password });
+    const user = saveSession(response.data);
+    setCurrentUser(user);
+    setAuthReady(true);
+    return user;
   };
 
   const updateCurrentUser = (updatedUser) => {
-    const newUserData = {
-      id: updatedUser.id,
-      fullName: updatedUser.fullName,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      phone: updatedUser.phone,
-      address: updatedUser.address,
-      vehicleType: updatedUser.vehicleType,
-      vehicleNumber: updatedUser.vehicleNumber,
-      message: "Profile updated",
-    };
-
-    localStorage.setItem("foodUser", JSON.stringify(newUserData));
-    setCurrentUser(newUserData);
+    const session = readStoredSession();
+    if (!session || !isValidUser(updatedUser)) return;
+    const user = { ...session.user, ...updatedUser };
+    if (!isValidUser(user) || user.id !== session.user.id || user.role !== session.user.role) return;
+    window.sessionStorage.setItem("quickbiteSession", JSON.stringify({ ...session, user }));
+    setCurrentUser(user);
   };
 
-  const logoutUser = () => {
-    localStorage.removeItem("foodUser");
-    setCurrentUser(null);
-  };
+  const logoutUser = () => { clearSession(); setCurrentUser(null); };
 
   return (
-    <AuthContext.Provider
-      value={{
-        currentUser,
-        registerUser,
-        loginUser,
-        updateCurrentUser,
-        logoutUser,
-        isLoggedIn: !!currentUser,
-      }}
-    >
+    <AuthContext.Provider value={{ currentUser, authReady, registerUser, loginUser,
+      updateCurrentUser, logoutUser, isLoggedIn: !!currentUser }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// The hook shares the provider's context and is intentionally exported here.
 // eslint-disable-next-line react-refresh/only-export-components
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export function useAuth() { return useContext(AuthContext); }

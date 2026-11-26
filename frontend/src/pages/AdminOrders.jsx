@@ -23,18 +23,12 @@ function AdminOrders() {
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const orderStatuses = [
-    "PENDING",
-    "CONFIRMED",
-    "PREPARING",
-    "READY_FOR_PICKUP",
-    "ASSIGNED_TO_DELIVERY",
-    "ACCEPTED_BY_DELIVERY",
-    "PICKED_UP",
-    "ON_THE_WAY",
-    "DELIVERED",
-    "CANCELLED",
-  ];
+  const nextAdminStatuses = {
+    PENDING: ["CONFIRMED", "CANCELLED"],
+    CONFIRMED: ["PREPARING", "CANCELLED"],
+    PREPARING: ["READY_FOR_PICKUP", "CANCELLED"],
+    READY_FOR_PICKUP: ["CANCELLED"],
+  };
 
   useEffect(() => {
     if (!loading && highlightedOrderId && orderRefs.current[highlightedOrderId]) {
@@ -95,7 +89,7 @@ function AdminOrders() {
   };
 
   const canAssignDelivery = (order) => {
-    return order.status !== "DELIVERED" && order.status !== "CANCELLED";
+    return ["PENDING", "CONFIRMED", "PREPARING", "READY_FOR_PICKUP", "ASSIGNED_TO_DELIVERY"].includes(order.status);
   };
 
   const canDeleteOrder = (order) => {
@@ -307,7 +301,7 @@ function AdminOrders() {
                       updateOrderStatus(order.id, e.target.value)
                     }
                   >
-                    {orderStatuses.map((status) => (
+                    {[order.status, ...(nextAdminStatuses[order.status] || [])].map((status) => (
                       <option value={status} key={status}>
                         {status.replaceAll("_", " ")}
                       </option>

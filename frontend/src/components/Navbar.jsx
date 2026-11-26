@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Icon from "./Icon";
+import NotificationBell from "./NotificationBell";
 
 const linksByRole = {
   guest: [{ path: "/", label: "Home", icon: "home" }, { path: "/menu", label: "Menu", icon: "menu" }, { path: "/login", label: "Login", icon: "login", mobileOnly: true }, { path: "/register", label: "Join", icon: "plus", mobileOnly: true }],
@@ -40,6 +41,7 @@ function Navbar() {
       <div className="nav-actions">
         {currentUser ? (
           <>
+            {currentUser.role === "CUSTOMER" && <NotificationBell />}
             <button type="button" className="user-profile-chip" onClick={() => navigate("/profile")} aria-label={`View profile for ${currentUser.fullName}`}>
               <span className="profile-avatar">{displayInitials}</span>
               <span className="profile-text"><strong>{currentUser.fullName}</strong><span>{currentUser.role === "DELIVERY" ? "Delivery Person" : currentUser.role === "ADMIN" ? "Admin" : "Customer"}</span></span>

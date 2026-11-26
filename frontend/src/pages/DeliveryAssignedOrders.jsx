@@ -27,12 +27,11 @@ function DeliveryAssignedOrders() {
   const [orderToReject, setOrderToReject] = useState(null);
   const [rejecting, setRejecting] = useState(false);
 
-  const deliveryStatuses = [
-    "ACCEPTED_BY_DELIVERY",
-    "PICKED_UP",
-    "ON_THE_WAY",
-    "DELIVERED",
-  ];
+  const nextDeliveryStatus = {
+    ACCEPTED_BY_DELIVERY: "PICKED_UP",
+    PICKED_UP: "ON_THE_WAY",
+    ON_THE_WAY: "DELIVERED",
+  };
 
   useEffect(() => {
     if (!loading && highlightedOrderId && orderRefs.current[highlightedOrderId]) {
@@ -306,7 +305,7 @@ function DeliveryAssignedOrders() {
                         updateDeliveryStatus(order.id, e.target.value)
                       }
                     >
-                      {deliveryStatuses.map((status) => (
+                      {[order.status, nextDeliveryStatus[order.status]].filter(Boolean).map((status) => (
                         <option value={status} key={status}>
                           {status.replaceAll("_", " ")}
                         </option>
