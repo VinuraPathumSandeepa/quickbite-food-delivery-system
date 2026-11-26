@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
@@ -12,7 +13,15 @@ function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [mobileTop, setMobileTop] = useState(68);
+  const [mobileMaxHeight, setMobileMaxHeight] = useState(520);
+  const [isMobile, setIsMobile] = useState(() =>
+    window.matchMedia("(max-width: 900px)").matches
+  );
+  const wrapperRef = useRef(null);
   const dropdownRef = useRef(null);
+  const bellRef = useRef(null);
+  const closeRef = useRef(null);
 
   const loadNotifications = useCallback(async () => {
     if (!userId) return;
@@ -36,19 +45,57 @@ function NotificationBell() {
   }, [userId, loadNotifications]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const media = window.matchMedia("(max-width: 900px)");
+    const updateMobile = () => setIsMobile(media.matches);
+    media.addEventListener("change", updateMobile);
+    return () => media.removeEventListener("change", updateMobile);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+
+    const updatePosition = () => {
+      const visualViewport = window.visualViewport;
+      const viewportBottom = visualViewport
+        ? visualViewport.offsetTop + visualViewport.height
+        : window.innerHeight;
+      const bellBottom = bellRef.current?.getBoundingClientRect().bottom || 60;
+      const top = Math.min(Math.max(12, bellBottom + 8), Math.max(12, viewportBottom - 168));
+      setMobileTop(Math.round(top));
+      setMobileMaxHeight(Math.max(120, Math.floor(viewportBottom - top - 12)));
+    };
+    const handlePointerDown = (event) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
+        !wrapperRef.current?.contains(event.target) &&
+        !dropdownRef.current?.contains(event.target)
       ) {
         setOpen(false);
       }
     };
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        bellRef.current?.focus();
+      }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    updatePosition();
+    closeRef.current?.focus();
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition);
+    window.visualViewport?.addEventListener("resize", updatePosition);
+    window.visualViewport?.addEventListener("scroll", updatePosition);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition);
+      window.visualViewport?.removeEventListener("resize", updatePosition);
+      window.visualViewport?.removeEventListener("scroll", updatePosition);
+    };
+  }, [open, isMobile]);
 
   const markAsRead = async (notificationId) => {
     try {
@@ -114,9 +161,86 @@ function NotificationBell() {
     }
   };
 
-  return (
-    <div className="notification-wrapper" ref={dropdownRef}>
+  const renderNotification = (notification) => (
+    <div
+      className={notification.readStatus ? "notification-item" : "notification-item unread-notification"}
+      key={notification.id}
+    >
       <button
+        className="notification-open"
+        onClick={() => handleNotificationClick(notification)}
+        aria-label={`Open notification: ${notification.title}`}
+      >
+        <span className="notification-item-icon">
+          <Icon name={getNotificationIcon(notification.type)} size={20} />
+        </span>
+        <span className="notification-item-content">
+          <strong>{notification.title}</strong>
+          <span className="notification-message">{notification.message}</span>
+          <span>{new Date(notification.createdAt).toLocaleString()}</span>
+        </span>
+      </button>
+      <div className="notification-actions">
+        {!notification.readStatus && (
+          <button onClick={() => markAsRead(notification.id)}>Mark Read</button>
+        )}
+        <button
+          className="notification-delete-btn"
+          onClick={() => deleteNotification(notification.id)}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+
+  const panel = (
+    <div
+      className="notification-dropdown"
+      id="notification-dropdown"
+      ref={dropdownRef}
+      role="region"
+      aria-label="Notifications"
+      style={{
+        "--notification-mobile-top": `${mobileTop}px`,
+        "--notification-mobile-max-height": `${mobileMaxHeight}px`,
+      }}
+    >
+      <div className="notification-dropdown-header">
+        <div>
+          <h3>Notifications</h3>
+          <p>{unreadCount} unread notification(s)</p>
+        </div>
+        {unreadCount > 0 && (
+          <button onClick={markAllAsRead}>Mark all read</button>
+        )}
+        <button
+          ref={closeRef}
+          className="notification-close-btn"
+          aria-label="Close notifications"
+          onClick={() => { setOpen(false); bellRef.current?.focus(); }}
+        >
+          ✕
+        </button>
+      </div>
+      {notifications.length === 0 ? (
+        <div className="notification-empty">
+          <div><Icon name="bell" size={32} /></div>
+          <strong>No notifications</strong>
+          <p>New updates will appear here.</p>
+        </div>
+      ) : (
+        <div className="notification-list">
+          {notifications.map(renderNotification)}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="notification-wrapper" ref={wrapperRef}>
+      <button
+        ref={bellRef}
         className="notification-bell-btn"
         onClick={() => setOpen((previous) => !previous)}
         aria-label={`Notifications, ${unreadCount} unread`}
@@ -124,89 +248,13 @@ function NotificationBell() {
         aria-controls="notification-dropdown"
       >
         <Icon name="bell" size={22} />
-
         {unreadCount > 0 && (
           <span className="notification-count">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
-
-      {open && (
-        <div className="notification-dropdown" id="notification-dropdown" role="region" aria-label="Notifications" onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}>
-          <div className="notification-dropdown-header">
-            <div>
-              <h3>Notifications</h3>
-              <p>{unreadCount} unread notification(s)</p>
-            </div>
-
-            {unreadCount > 0 && (
-              <button onClick={markAllAsRead}>Mark all read</button>
-            )}
-          </div>
-
-          {notifications.length === 0 ? (
-            <div className="notification-empty">
-              <div><Icon name="bell" size={32} /></div>
-              <strong>No notifications</strong>
-              <p>New updates will appear here.</p>
-            </div>
-          ) : (
-            <div className="notification-list">
-              {notifications.slice(0, 8).map((notification) => (
-                <div
-                  className={
-                    notification.readStatus
-                      ? "notification-item notification-clickable"
-                      : "notification-item unread-notification notification-clickable"
-                  }
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); handleNotificationClick(notification); } }}
-                  aria-label={`Open notification: ${notification.title}`}
-                >
-                  <div className="notification-item-icon">
-                    <Icon name={getNotificationIcon(notification.type)} size={20} />
-                  </div>
-
-                  <div className="notification-item-content">
-                    <strong>{notification.title}</strong>
-                    <p>{notification.message}</p>
-                    <span>
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </span>
-
-                    <div className="notification-actions">
-                      {!notification.readStatus && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            markAsRead(notification.id);
-                          }}
-                        >
-                          Mark Read
-                        </button>
-                      )}
-
-                      <button
-                        className="notification-delete-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteNotification(notification.id);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {open && (isMobile ? createPortal(panel, document.body) : panel)}
     </div>
   );
 }
