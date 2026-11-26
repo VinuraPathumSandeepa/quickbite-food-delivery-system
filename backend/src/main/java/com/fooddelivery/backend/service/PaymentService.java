@@ -1,11 +1,13 @@
 package com.fooddelivery.backend.service;
 
+import com.fooddelivery.backend.config.AccessGuard;
 import com.fooddelivery.backend.dto.PaymentRequest;
 import com.fooddelivery.backend.entity.CustomerOrder;
 import com.fooddelivery.backend.entity.OrderStatus;
 import com.fooddelivery.backend.entity.PaymentStatus;
 import com.fooddelivery.backend.repository.CustomerOrderRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -14,15 +16,20 @@ import java.util.UUID;
 public class PaymentService {
 
     private final CustomerOrderRepository customerOrderRepository;
+    private final NotificationService notificationService;
 
-    public PaymentService(CustomerOrderRepository customerOrderRepository) {
+    public PaymentService(CustomerOrderRepository customerOrderRepository,
+                          NotificationService notificationService) {
         this.customerOrderRepository = customerOrderRepository;
+        this.notificationService = notificationService;
     }
 
+    @Transactional
     public CustomerOrder processPayment(Long orderId, PaymentRequest request) {
 
-        CustomerOrder order = customerOrderRepository.findById(orderId)
+        CustomerOrder order = customerOrderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+        AccessGuard.requireSelf(order.getCustomer().getId());
 
         if (order.getStatus() == OrderStatus.CANCELLED) {
             throw new RuntimeException("Cannot pay for a cancelled order");
@@ -53,15 +60,18 @@ public class PaymentService {
 
         if (order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.CONFIRMED);
+            notificationService.createCustomerOrderNotification(order, OrderStatus.CONFIRMED);
         }
 
         return customerOrderRepository.save(order);
     }
 
+    @Transactional
     public CustomerOrder markPaymentFailed(Long orderId) {
 
-        CustomerOrder order = customerOrderRepository.findById(orderId)
+        CustomerOrder order = customerOrderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+        AccessGuard.requireSelf(order.getCustomer().getId());
 
         order.setPaymentStatus(PaymentStatus.FAILED);
 
@@ -69,7 +79,9 @@ public class PaymentService {
     }
 
     public CustomerOrder getPaymentStatus(Long orderId) {
-        return customerOrderRepository.findById(orderId)
+        CustomerOrder order = customerOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+        AccessGuard.requireSelf(order.getCustomer().getId());
+        return order;
     }
 }

@@ -1,5 +1,6 @@
 package com.fooddelivery.backend.service;
 
+import com.fooddelivery.backend.config.AccessGuard;
 import com.fooddelivery.backend.dto.AddToCartRequest;
 import com.fooddelivery.backend.dto.UpdateCartItemRequest;
 import com.fooddelivery.backend.entity.CartItem;
@@ -30,6 +31,7 @@ public class CartService {
     }
 
     public CartItem addToCart(Long customerId, AddToCartRequest request) {
+        AccessGuard.requireSelf(customerId);
         User customer = userRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
@@ -67,12 +69,14 @@ public class CartService {
     }
 
     public List<CartItem> getCartItems(Long customerId) {
+        AccessGuard.requireSelf(customerId);
         return cartItemRepository.findByCustomerId(customerId);
     }
 
     public CartItem updateCartItem(Long cartItemId, UpdateCartItemRequest request) {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        AccessGuard.requireCartOwner(cartItem);
 
         if (request.getQuantity() == null || request.getQuantity() <= 0) {
             throw new RuntimeException("Quantity must be greater than 0");
@@ -84,19 +88,20 @@ public class CartService {
     }
 
     public void removeCartItem(Long cartItemId) {
-        if (!cartItemRepository.existsById(cartItemId)) {
-            throw new RuntimeException("Cart item not found");
-        }
-
-        cartItemRepository.deleteById(cartItemId);
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        AccessGuard.requireCartOwner(item);
+        cartItemRepository.delete(item);
     }
 
     public void clearCart(Long customerId) {
+        AccessGuard.requireSelf(customerId);
         List<CartItem> cartItems = cartItemRepository.findByCustomerId(customerId);
         cartItemRepository.deleteAll(cartItems);
     }
 
     public BigDecimal getCartTotal(Long customerId) {
+        AccessGuard.requireSelf(customerId);
         List<CartItem> cartItems = cartItemRepository.findByCustomerId(customerId);
 
         BigDecimal total = BigDecimal.ZERO;

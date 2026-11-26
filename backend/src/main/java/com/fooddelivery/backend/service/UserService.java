@@ -1,5 +1,6 @@
 package com.fooddelivery.backend.service;
 
+import com.fooddelivery.backend.config.AccessGuard;
 import com.fooddelivery.backend.dto.UpdateProfileRequest;
 import com.fooddelivery.backend.entity.Role;
 import com.fooddelivery.backend.entity.User;
@@ -16,11 +17,13 @@ public class UserService {
     }
 
     public User getUserProfile(Long userId) {
+        AccessGuard.requireSelf(userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     public User updateUserProfile(Long userId, UpdateProfileRequest request) {
+        AccessGuard.requireSelf(userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

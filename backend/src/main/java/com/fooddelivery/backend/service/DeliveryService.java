@@ -1,5 +1,6 @@
 package com.fooddelivery.backend.service;
 
+import com.fooddelivery.backend.config.AccessGuard;
 import com.fooddelivery.backend.dto.AssignDeliveryRequest;
 import com.fooddelivery.backend.dto.DeliveryStatusUpdateRequest;
 import com.fooddelivery.backend.entity.CustomerOrder;
@@ -10,6 +11,8 @@ import com.fooddelivery.backend.repository.CustomerOrderRepository;
 import com.fooddelivery.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +36,7 @@ public class DeliveryService {
     }
 
     public List<User> getAllDeliveryPersons() {
+        AccessGuard.requireRole(Role.ADMIN);
         return userRepository.findByRole(Role.DELIVERY);
     }
 
@@ -41,8 +45,9 @@ public class DeliveryService {
             Long orderId,
             AssignDeliveryRequest request
     ) {
-        CustomerOrder order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        AccessGuard.requireRole(Role.ADMIN);
+        CustomerOrder order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         User deliveryPerson = userRepository.findById(request.getDeliveryPersonId())
                 .orElseThrow(() -> new RuntimeException("Delivery person not found"));
@@ -51,13 +56,17 @@ public class DeliveryService {
             throw new RuntimeException("Selected user is not a delivery person");
         }
 
-        if (
-                order.getStatus() == OrderStatus.DELIVERED ||
-                order.getStatus() == OrderStatus.CANCELLED
-        ) {
-            throw new RuntimeException(
-                    "Cannot assign delivery person to completed or cancelled order"
-            );
+        if (order.getStatus() == OrderStatus.ASSIGNED_TO_DELIVERY &&
+                order.getDeliveryPerson() != null &&
+                order.getDeliveryPerson().getId().equals(deliveryPerson.getId())) {
+            return order;
+        }
+        if (order.getStatus() != OrderStatus.PENDING &&
+                order.getStatus() != OrderStatus.CONFIRMED &&
+                order.getStatus() != OrderStatus.PREPARING &&
+                order.getStatus() != OrderStatus.READY_FOR_PICKUP &&
+                order.getStatus() != OrderStatus.ASSIGNED_TO_DELIVERY) {
+            throw new RuntimeException("This order cannot be assigned now");
         }
 
         order.setDeliveryPerson(deliveryPerson);
@@ -67,6 +76,7 @@ public class DeliveryService {
         CustomerOrder savedOrder = orderRepository.save(order);
 
         notificationService.createDeliveryAssignedNotification(savedOrder);
+        notificationService.createCustomerOrderNotification(savedOrder, OrderStatus.ASSIGNED_TO_DELIVERY);
 
         return savedOrder;
     }
@@ -74,12 +84,16 @@ public class DeliveryService {
     public List<CustomerOrder> getOrdersAssignedToDeliveryPerson(
             Long deliveryPersonId
     ) {
+        AccessGuard.requireRole(Role.DELIVERY);
+        AccessGuard.requireSelf(deliveryPersonId);
         return orderRepository.findByDeliveryPersonId(deliveryPersonId);
     }
 
     public List<CustomerOrder> getActiveDeliveryOrders(
             Long deliveryPersonId
     ) {
+        AccessGuard.requireRole(Role.DELIVERY);
+        AccessGuard.requireSelf(deliveryPersonId);
         List<CustomerOrder> orders =
                 orderRepository.findByDeliveryPersonId(deliveryPersonId);
 
@@ -94,6 +108,8 @@ public class DeliveryService {
     public List<CustomerOrder> getCompletedDeliveryOrders(
             Long deliveryPersonId
     ) {
+        AccessGuard.requireRole(Role.DELIVERY);
+        AccessGuard.requireSelf(deliveryPersonId);
         List<CustomerOrder> orders =
                 orderRepository.findByDeliveryPersonId(deliveryPersonId);
 
@@ -102,6 +118,7 @@ public class DeliveryService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public CustomerOrder acceptDelivery(
             Long orderId,
             Long deliveryPersonId
@@ -121,6 +138,7 @@ public class DeliveryService {
         return orderRepository.save(order);
     }
 
+    @Transactional
     public CustomerOrder rejectDelivery(
             Long orderId,
             Long deliveryPersonId
@@ -141,6 +159,7 @@ public class DeliveryService {
         return orderRepository.save(order);
     }
 
+    @Transactional
     public CustomerOrder updateDeliveryStatus(
             Long orderId,
             Long deliveryPersonId,
@@ -157,38 +176,38 @@ public class DeliveryService {
             throw new RuntimeException("Delivery status is required");
         }
 
-        if (
-                newStatus != OrderStatus.ACCEPTED_BY_DELIVERY &&
-                newStatus != OrderStatus.PICKED_UP &&
-                newStatus != OrderStatus.ON_THE_WAY &&
-                newStatus != OrderStatus.DELIVERED
-        ) {
-            throw new RuntimeException(
-                    "This status is not allowed for delivery person"
-            );
+        if (newStatus == order.getStatus()) return order;
+        boolean validTransition =
+                (order.getStatus() == OrderStatus.ACCEPTED_BY_DELIVERY && newStatus == OrderStatus.PICKED_UP) ||
+                (order.getStatus() == OrderStatus.PICKED_UP && newStatus == OrderStatus.ON_THE_WAY) ||
+                (order.getStatus() == OrderStatus.ON_THE_WAY && newStatus == OrderStatus.DELIVERED);
+        if (!validTransition) {
+            throw new RuntimeException("Delivery status transition is not allowed");
         }
 
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
 
-        return orderRepository.save(order);
+        CustomerOrder savedOrder = orderRepository.save(order);
+        notificationService.createCustomerOrderNotification(savedOrder, newStatus);
+        return savedOrder;
     }
 
     private CustomerOrder getAssignedOrderForDeliveryPerson(
             Long orderId,
             Long deliveryPersonId
     ) {
-        CustomerOrder order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        AccessGuard.requireRole(Role.DELIVERY);
+        AccessGuard.requireSelf(deliveryPersonId);
+        CustomerOrder order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         if (order.getDeliveryPerson() == null) {
-            throw new RuntimeException(
-                    "This order is not assigned to a delivery person"
-            );
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
         }
 
         if (!order.getDeliveryPerson().getId().equals(deliveryPersonId)) {
-            throw new RuntimeException("This order is not assigned to you");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
         }
 
         return order;

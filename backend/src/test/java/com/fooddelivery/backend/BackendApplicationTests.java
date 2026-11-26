@@ -13,6 +13,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +24,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 @SpringBootTest(properties = {
 		"spring.datasource.url=jdbc:h2:mem:quickbite_test;DB_CLOSE_DELAY=-1",
@@ -32,6 +36,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @AutoConfigureMockMvc
 class BackendApplicationTests {
+	@DynamicPropertySource
+	static void signingKey(DynamicPropertyRegistry registry) {
+		byte[] key = new byte[32];
+		new SecureRandom().nextBytes(key);
+		registry.add("QUICKBITE_JWT_SECRET_BASE64", () -> Base64.getEncoder().encodeToString(key));
+	}
 	@Autowired UserRepository users;
 	@Autowired AuthService auth;
 	@Autowired PasswordEncoder encoder;

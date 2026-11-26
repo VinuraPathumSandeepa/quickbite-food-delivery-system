@@ -4,6 +4,7 @@ import com.fooddelivery.backend.entity.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import com.fooddelivery.backend.entity.NotificationType;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
@@ -12,4 +13,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByRecipientIdAndReadStatusFalseOrderByCreatedAtDesc(Long recipientId);
 
     long countByRecipientIdAndReadStatusFalse(Long recipientId);
+
+    boolean existsByRecipientIdAndRelatedOrderIdAndType(Long recipientId, Long relatedOrderId, NotificationType type);
 }

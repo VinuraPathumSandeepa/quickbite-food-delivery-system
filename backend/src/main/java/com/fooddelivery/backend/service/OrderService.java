@@ -1,16 +1,20 @@
 package com.fooddelivery.backend.service;
 
+import com.fooddelivery.backend.config.AccessGuard;
 import com.fooddelivery.backend.entity.CartItem;
 import com.fooddelivery.backend.entity.CustomerOrder;
 import com.fooddelivery.backend.entity.OrderItem;
 import com.fooddelivery.backend.entity.OrderStatus;
 import com.fooddelivery.backend.entity.PaymentStatus;
+import com.fooddelivery.backend.entity.Role;
 import com.fooddelivery.backend.entity.User;
 import com.fooddelivery.backend.repository.CartItemRepository;
 import com.fooddelivery.backend.repository.CustomerOrderRepository;
 import com.fooddelivery.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,6 +48,8 @@ public class OrderService {
             String paymentMethod,
             String notes
     ) {
+        AccessGuard.requireRole(Role.CUSTOMER);
+        AccessGuard.requireSelf(customerId);
         User customer = userRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
@@ -98,26 +104,33 @@ public class OrderService {
         cartItemRepository.deleteAll(cartItems);
 
         notificationService.createNewOrderNotificationForAdmins(savedOrder);
+        notificationService.createCustomerOrderNotification(savedOrder, OrderStatus.PENDING);
 
         return savedOrder;
     }
 
     public List<CustomerOrder> getOrdersByCustomer(Long customerId) {
+        AccessGuard.requireSelf(customerId);
         return orderRepository.findByCustomerId(customerId);
     }
 
     public List<CustomerOrder> getAllOrders() {
+        AccessGuard.requireRole(Role.ADMIN);
         return orderRepository.findAll();
     }
 
     public CustomerOrder getOrderById(Long orderId) {
-        return orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        CustomerOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        AccessGuard.requireOrderAccess(order);
+        return order;
     }
 
+    @Transactional
     public CustomerOrder updateOrderStatus(Long orderId, String status) {
-        CustomerOrder order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        AccessGuard.requireRole(Role.ADMIN);
+        CustomerOrder order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         OrderStatus newStatus;
 
@@ -127,15 +140,27 @@ public class OrderService {
             throw new RuntimeException("Invalid order status");
         }
 
+        if (newStatus == order.getStatus()) return order;
+        if (!canAdminTransition(order.getStatus(), newStatus)) {
+            throw new RuntimeException("Order status transition is not allowed");
+        }
+
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
 
-        return orderRepository.save(order);
+        CustomerOrder savedOrder = orderRepository.save(order);
+        notificationService.createCustomerOrderNotification(savedOrder, newStatus);
+        return savedOrder;
     }
 
+    @Transactional
     public CustomerOrder cancelOrder(Long orderId) {
-        CustomerOrder order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        AccessGuard.requireRole(Role.CUSTOMER);
+        CustomerOrder order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        AccessGuard.requireOrderAccess(order);
+
+        if (order.getStatus() == OrderStatus.CANCELLED) return order;
 
         if (order.getStatus() != OrderStatus.PENDING) {
             throw new RuntimeException("Only pending orders can be cancelled");
@@ -144,13 +169,16 @@ public class OrderService {
         order.setStatus(OrderStatus.CANCELLED);
         order.setUpdatedAt(LocalDateTime.now());
 
-        return orderRepository.save(order);
+        CustomerOrder savedOrder = orderRepository.save(order);
+        notificationService.createCustomerOrderNotification(savedOrder, OrderStatus.CANCELLED);
+        return savedOrder;
     }
 
     @Transactional
     public void deleteCompletedOrCancelledOrder(Long orderId) {
-        CustomerOrder order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+        CustomerOrder order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        if (AccessGuard.role() != Role.ADMIN) AccessGuard.requireOrderAccess(order);
 
         if (
                 order.getStatus() != OrderStatus.DELIVERED &&
@@ -162,5 +190,15 @@ public class OrderService {
         }
 
         orderRepository.delete(order);
+    }
+
+    private boolean canAdminTransition(OrderStatus current, OrderStatus next) {
+        return switch (current) {
+            case PENDING -> next == OrderStatus.CONFIRMED || next == OrderStatus.CANCELLED;
+            case CONFIRMED -> next == OrderStatus.PREPARING || next == OrderStatus.CANCELLED;
+            case PREPARING -> next == OrderStatus.READY_FOR_PICKUP || next == OrderStatus.CANCELLED;
+            case READY_FOR_PICKUP -> next == OrderStatus.CANCELLED;
+            default -> false;
+        };
     }
 }

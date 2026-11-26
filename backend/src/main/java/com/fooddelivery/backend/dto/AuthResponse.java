@@ -1,6 +1,7 @@
 package com.fooddelivery.backend.dto;
 
 import com.fooddelivery.backend.entity.Role;
+import java.time.Instant;
 
 public class AuthResponse {
 
@@ -9,6 +10,8 @@ public class AuthResponse {
     private String email;
     private Role role;
     private String message;
+    private String accessToken;
+    private Instant expiresAt;
 
     public AuthResponse() {
     }
@@ -41,6 +44,14 @@ public class AuthResponse {
         return message;
     }
 
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -59,5 +70,13 @@ public class AuthResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public void setExpiresAt(Instant expiresAt) {
+        this.expiresAt = expiresAt;
     }
 }

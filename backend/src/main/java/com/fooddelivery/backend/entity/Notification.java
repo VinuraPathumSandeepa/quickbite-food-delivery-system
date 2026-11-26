@@ -1,6 +1,7 @@
 package com.fooddelivery.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "recipient_id", nullable = false)
+    @JsonIgnore
     @JsonIgnoreProperties({
             "password",
             "hibernateLazyInitializer",
