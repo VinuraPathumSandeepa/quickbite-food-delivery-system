@@ -1,8 +1,13 @@
 package com.fooddelivery.backend.config;
 
+import jakarta.persistence.PersistenceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.TransactionException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +19,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied() {
@@ -32,6 +39,13 @@ public class GlobalExceptionHandler {
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
         return new ResponseEntity<>(body, status);
+    }
+
+    @ExceptionHandler({DataAccessException.class, PersistenceException.class, TransactionException.class})
+    public ResponseEntity<Map<String, Object>> handleDatabaseException(RuntimeException ex) {
+        log.error("Database operation failed", ex);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR,
+                "We couldn't complete your request right now. Please try again.");
     }
 
     @ExceptionHandler(RuntimeException.class)

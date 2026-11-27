@@ -42,8 +42,8 @@ function Checkout() {
       const response = await api.get(`/cart/${currentUser.id}`);
       setCartItems(response.data);
       setErrorMessage("");
-    } catch (error) {
-      setErrorMessage(error.response?.data?.message || "Failed to load cart.");
+    } catch {
+      setErrorMessage("Couldn't load your cart. Please try again.");
     } finally {
       setLoadingCart(false);
     }
@@ -198,10 +198,7 @@ function Checkout() {
       if (Object.keys(backendErrors).length > 0) {
         setErrors(backendErrors);
       } else {
-        setErrorMessage(
-          error.response?.data?.message ||
-            "Failed to place order. Please try again."
-        );
+        setErrorMessage("Checkout could not be completed. Check My Orders before trying again.");
       }
     } finally {
       setPlacingOrder(false);
