@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { getLandingPath } from "../context/session";
 import {
   getBackendFieldErrors,
+  safeCustomerMessage,
   validateLoginForm,
 } from "../utils/validation";
 
@@ -61,8 +62,7 @@ function Login() {
         setErrors(backendErrors);
       } else {
         setErrorMessage(
-          error.response?.data?.message ||
-            "Login failed. Check your email and password."
+          safeCustomerMessage(error, "Login failed. Check your email and password.")
         );
       }
     } finally {

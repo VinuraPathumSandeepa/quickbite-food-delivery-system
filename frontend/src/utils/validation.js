@@ -6,8 +6,27 @@ export const isValidPhone = (phone) => {
   return /^[0-9]{10,15}$/.test(phone);
 };
 
+const isSafeCustomerText = (value) =>
+  typeof value === "string" &&
+  value.trim().length > 0 &&
+  value.length <= 180 &&
+  !/[\r\n]/.test(value) &&
+  !/(?:hibernate|jdbc|sql(?:exception|syntax)?|stack\s*trace|persistenceexception|dataintegrity|bearer\s+\S+|eyJ[A-Za-z0-9_-]{20,}|(?:table|column)\s+.{1,100}(?:doesn't exist|unknown)|\b(?:select|insert|update|delete)\s+.+\s+(?:from|into|where)\b)/i.test(value);
+
+export const safeCustomerMessage = (error, fallback) => {
+  const value = error?.response?.data?.message;
+  return error?.response?.status >= 500 || !isSafeCustomerText(value)
+    ? fallback
+    : value.trim();
+};
+
 export const getBackendFieldErrors = (error) => {
-  return error.response?.data?.fieldErrors || {};
+  if (error?.response?.status >= 500) return {};
+  const fields = error?.response?.data?.fieldErrors;
+  if (!fields || typeof fields !== "object" || Array.isArray(fields)) return {};
+  return Object.fromEntries(
+    Object.entries(fields).filter(([, value]) => isSafeCustomerText(value))
+  );
 };
 
 // Login validation

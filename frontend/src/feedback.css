@@ -1,0 +1,26 @@
+/* Customer feedback remains readable above mobile navigation and inside short viewports. */
+.error-box, .success-box, .field-error, .retry-notice, .cart-toast, .login-prompt-card, .confirm-modal-card, .order-success-card { overflow-wrap: anywhere; }
+.retry-notice > span { min-width: 0; flex: 1; }
+.retry-notice .outline-btn { flex: none; }
+.login-prompt-overlay, .confirm-modal-overlay, .order-success-overlay { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); overflow: auto; overscroll-behavior: contain; }
+.login-prompt-card, .confirm-modal-card, .order-success-card { max-width: 100%; max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+.login-prompt-close, .confirm-modal-close { min-width: 44px; min-height: 44px; }
+.cart-toast { max-height: min(70dvh, 520px); overflow-y: auto; overscroll-behavior: contain; padding-right: 44px; }
+.cart-toast-content { min-width: 0; }
+.cart-toast-close { min-width: 44px; min-height: 44px; }
+.cart-toast-actions button { min-height: 44px; }
+@media (max-width: 767px) {
+  .retry-notice { align-items: flex-start; }
+  .retry-notice .outline-btn { width: auto; }
+  .cart-toast { left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); width: auto; padding: 16px 46px 16px 14px; gap: 10px; border-radius: 16px; }
+  .cart-toast-icon { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; }
+  .cart-toast-content h3 { font-size: 16px; }
+  .cart-toast-actions button { width: 100%; }
+  .login-prompt-card, .confirm-modal-card, .order-success-card { padding: 24px 18px; border-radius: 20px; }
+  .login-prompt-icon, .confirm-modal-icon, .order-success-icon { width: 60px; height: 60px; margin-bottom: 14px; font-size: 30px; }
+  .login-prompt-card h2, .confirm-modal-card h2, .order-success-card h2 { font-size: 24px; }
+  .confirm-modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .confirm-modal-actions button { min-width: 0; min-height: 44px; padding: 10px; font-size: 13px; }
+  .order-success-details { gap: 8px; padding: 10px; margin-bottom: 18px; }
+  .order-success-details div { padding: 10px; }
+}

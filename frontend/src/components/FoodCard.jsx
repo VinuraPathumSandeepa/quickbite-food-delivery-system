@@ -4,6 +4,7 @@ import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 import DialogShell from "./DialogShell";
+import { safeCustomerMessage } from "../utils/validation";
 
 function FoodCard({ food }) {
   const { currentUser } = useAuth();
@@ -74,8 +75,7 @@ function FoodCard({ food }) {
         {
           type: "error",
           title: "Cart Error",
-          message:
-            error.response?.data?.message || "Failed to add item to cart.",
+          message: safeCustomerMessage(error, "Couldn't add this item. Please try again."),
         },
         false
       );
@@ -149,7 +149,7 @@ function FoodCard({ food }) {
       )}
 
       {toast && (
-        <div className={`cart-toast ${toast.type === "success" ? "cart-toast-success" : "cart-toast-error"}`} role="status">
+        <div className={`cart-toast ${toast.type === "success" ? "cart-toast-success" : "cart-toast-error"}`} role={toast.type === "error" ? "alert" : "status"}>
           <button className="cart-toast-close" aria-label="Dismiss notification" onClick={() => setToast(null)}>
             ✕
           </button>

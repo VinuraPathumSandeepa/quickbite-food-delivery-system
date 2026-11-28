@@ -9,6 +9,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
 import {
   getBackendFieldErrors,
+  safeCustomerMessage,
   validateProfileForm,
 } from "../utils/validation";
 
@@ -51,7 +52,7 @@ function Profile() {
 
       setMessage("");
     } catch (error) {
-      setMessage(error.response?.data?.message || "Failed to load profile.");
+      setMessage(safeCustomerMessage(error, "Couldn't load your profile. Please try again."));
       setMessageType("error");
     } finally {
       setLoading(false);
@@ -147,7 +148,7 @@ function Profile() {
       if (Object.keys(backendErrors).length > 0) {
         setErrors(backendErrors);
       } else {
-        setMessage(error.response?.data?.message || "Failed to update profile.");
+        setMessage(safeCustomerMessage(error, "Couldn't update your profile. Please try again."));
         setMessageType("error");
       }
     } finally {

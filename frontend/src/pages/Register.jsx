@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import {
   getBackendFieldErrors,
+  safeCustomerMessage,
   validateRegisterForm,
 } from "../utils/validation";
 
@@ -85,8 +86,7 @@ function Register() {
         setErrors(backendErrors);
       } else {
         setErrorMessage(
-          error.response?.data?.message ||
-            "Registration failed. Please try again."
+          safeCustomerMessage(error, "Registration failed. Please try again.")
         );
       }
     } finally {

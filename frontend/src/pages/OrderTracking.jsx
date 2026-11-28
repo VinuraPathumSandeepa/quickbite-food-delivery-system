@@ -6,6 +6,7 @@ import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
 import RetryNotice from "../components/RetryNotice";
+import { safeCustomerMessage } from "../utils/validation";
 
 function OrderTracking() {
   const { orderId } = useParams();
@@ -64,7 +65,7 @@ function OrderTracking() {
       setOrder(response.data);
       setMessage("");
     } catch (error) {
-      setMessage(error.response?.data?.message || "Failed to load order.");
+      setMessage(safeCustomerMessage(error, "Couldn't load this order. Please try again."));
     } finally {
       setLoading(false);
     }

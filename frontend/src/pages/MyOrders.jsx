@@ -8,6 +8,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
 import DialogShell from "../components/DialogShell";
 import RetryNotice from "../components/RetryNotice";
+import { safeCustomerMessage } from "../utils/validation";
 import { useAuth } from "../context/AuthContext";
 
 function MyOrders() {
@@ -39,7 +40,7 @@ function MyOrders() {
       setOrders(sortedOrders);
       setMessage("");
     } catch (error) {
-      setMessage(error.response?.data?.message || "Failed to load orders.");
+      setMessage(safeCustomerMessage(error, "Couldn't load your orders. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -153,9 +154,7 @@ function MyOrders() {
       showToast({
         type: "error",
         title: "Cancel Failed",
-        message:
-          error.response?.data?.message ||
-          "Failed to cancel order. This order may already be processed.",
+        message: safeCustomerMessage(error, "Couldn't cancel this order. It may already be processed."),
       });
     } finally {
       setCancelling(false);
@@ -439,8 +438,9 @@ function MyOrders() {
               ? "cart-toast cart-toast-success"
               : "cart-toast cart-toast-error"
           }
+          role={toast.type === "error" ? "alert" : "status"}
         >
-          <button className="cart-toast-close" onClick={() => setToast(null)}>
+          <button className="cart-toast-close" type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}>
             ✕
           </button>
 
