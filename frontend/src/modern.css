@@ -266,3 +266,48 @@ img { height: auto; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Shared Home and Menu catalog density. Keep the food-specific image focus rules in index.css. */
+.featured-section, .menu-section { max-width: 1700px; margin-inline: auto; }
+.food-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(12px, 1.3vw, 20px); }
+.food-card { height: 100%; }
+.food-image-wrap { flex: none; aspect-ratio: 4 / 3; }
+.food-info { min-width: 0; min-height: 0; padding: 16px; }
+.food-price { font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; }
+.food-info h3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin: 7px 0 5px; font-size: 17px; line-height: 1.3; min-height: 2.6em; overflow-wrap: anywhere; }
+.food-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin: 0 0 12px; font-size: 13px; line-height: 1.4; min-height: 2.8em; overflow-wrap: anywhere; }
+.food-meta { align-items: center; gap: 6px; font-size: 12px; line-height: 1.35; }
+.food-meta span { white-space: nowrap; }
+.food-info .small-order-btn { min-height: 44px; margin-top: 12px; padding: 9px 10px; border-radius: 12px; font-size: 13px; }
+
+@media (min-width: 1440px) {
+  .featured-section .food-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .food-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .food-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .featured-section, .menu-section { padding-inline: 14px; }
+  .food-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .food-card { border-radius: 16px; }
+  .food-image-wrap { aspect-ratio: 4 / 3; }
+  .food-info { padding: 11px; }
+  .food-price { font-size: 15px; }
+  .food-info h3 { margin: 5px 0 4px; font-size: 15px; }
+  .food-description { font-size: 13px; margin-bottom: 9px; }
+  .food-meta { font-size: 12px; gap: 4px; }
+  .food-info .small-order-btn { margin-top: 10px; }
+}
+
+@media (max-width: 359px) {
+  .featured-section, .menu-section { padding-inline: 12px; }
+  .food-grid { gap: 10px; }
+  .food-info { padding: 9px; }
+  .food-meta { flex-wrap: wrap; }
+}
