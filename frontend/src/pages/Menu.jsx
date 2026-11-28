@@ -5,6 +5,7 @@ import PageHeader from "../components/PageHeader";
 import FoodCard from "../components/FoodCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
+import DialogShell from "../components/DialogShell";
 import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 
 function Menu() {
@@ -136,12 +137,17 @@ function Menu() {
     setShowSuggestions(false);
   };
 
-  const selectedCategoryName =
-    selectedCategoryId === "ALL"
-      ? "All Categories"
-      : categories.find(
-          (category) => String(category.id) === String(selectedCategoryId)
-        )?.name || "Selected Category";
+  const activeFilterCount = Number(selectedCategoryId !== "ALL") + Number(Boolean(sortDirection));
+  const hasFilters = Boolean(searchTerm || activeFilterCount);
+  const categoryChoices = (className) => (
+    <div className={className} role="group" aria-label="Food categories">
+      <button type="button" className={selectedCategoryId === "ALL" ? "category-chip active-category-chip" : "category-chip"} aria-pressed={selectedCategoryId === "ALL"} onClick={() => setSelectedCategoryId("ALL")}>All</button>
+      {categories.map((category) => (
+        <button type="button" key={category.id} className={String(selectedCategoryId) === String(category.id) ? "category-chip active-category-chip" : "category-chip"} aria-pressed={String(selectedCategoryId) === String(category.id)} onClick={() => setSelectedCategoryId(category.id)}>{category.name}</button>
+      ))}
+    </div>
+  );
+  const resultText = loading ? "Loading items..." : foodError ? "Items unavailable" : `${filteredFoods.length} items found`;
 
   return (
     <div className="app-page">
@@ -155,170 +161,41 @@ function Menu() {
 
       <section className="menu-section">
         <div className="menu-filter-panel">
-          <div className="filter-header">
-            <div>
-              <span className="filter-kicker">Explore Menu</span>
-              <h2>Find your perfect meal</h2>
-            </div>
-
-            <div className="results-count">
-              {loading ? "Loading items..." : foodError ? "Items unavailable" : `${filteredFoods.length} items found`}
-            </div>
-          </div>
-
-          <div className="search-suggestion-wrapper">
-            <div className="menu-search-box">
-              <span className="search-icon">🔍</span>
-
-              <input
-                type="text"
-                aria-label="Search the food menu"
-                placeholder="Search pizza, rice, burger..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-              />
-
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="search-clear-btn"
-                  onClick={() => {
-                    setSearchTerm("");
-                    setShowSuggestions(false);
-                  }}
-                >
-                  ✕
-                </button>
+          <div className="menu-toolbar">
+            <div className="search-suggestion-wrapper">
+              <div className="menu-search-box">
+                <span className="search-icon" aria-hidden="true">⌕</span>
+                <input
+                  type="search"
+                  aria-label="Search the food menu"
+                  placeholder="Search"
+                  value={searchTerm}
+                  onChange={(event) => { setSearchTerm(event.target.value); setShowSuggestions(true); }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={(event) => { if (event.key === "Escape") setShowSuggestions(false); }}
+                />
+                {searchTerm && <button type="button" className="search-clear-btn" aria-label="Clear search" onClick={() => { setSearchTerm(""); setShowSuggestions(false); }}>✕</button>}
+              </div>
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <div className="suggestion-box">
+                  {searchSuggestions.map((suggestion) => (
+                    <button type="button" className="suggestion-item" key={suggestion.id} onClick={() => handleSuggestionClick(suggestion)}>
+                      <span className="suggestion-left">
+                        {suggestion.imageUrl ? <img src={foodImageSource(suggestion.imageUrl)} alt="" className="suggestion-image" onError={handleFoodImageError} /> : <span className="suggestion-icon" aria-hidden="true">🍽️</span>}
+                        <span><strong>{suggestion.label}</strong><span>{suggestion.type}</span></span>
+                      </span>
+                      <span className="suggestion-arrow" aria-hidden="true">→</span>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-
-            {showSuggestions && searchSuggestions.length > 0 && (
-              <div className="suggestion-box">
-                {searchSuggestions.map((suggestion) => (
-                  <button
-                    type="button"
-                    className="suggestion-item"
-                    key={suggestion.id}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  >
-                    <div className="suggestion-left">
-                      {suggestion.imageUrl ? (
-                        <img
-                          src={foodImageSource(suggestion.imageUrl)}
-                          alt={suggestion.label}
-                          className="suggestion-image"
-                          onError={handleFoodImageError}
-                        />
-                      ) : (
-                        <div className="suggestion-icon">🍽️</div>
-                      )}
-
-                      <div>
-                        <strong>{suggestion.label}</strong>
-                        <span>{suggestion.type}</span>
-                      </div>
-                    </div>
-
-                    <span className="suggestion-arrow">→</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <button type="button" className="menu-filter-trigger" aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => { setShowSuggestions(false); setFiltersOpen(true); }}><span aria-hidden="true">☷</span> Filters{activeFilterCount > 0 && <span className="menu-filter-count">{activeFilterCount}</span>}</button>
+            <label className="menu-sort-control" htmlFor="menu-sort"><span>Sort</span><select id="menu-sort" value={sortDirection} onChange={(event) => setSortDirection(event.target.value)}><option value="">Recommended</option><option value="asc">Price: low to high</option><option value="desc">Price: high to low</option></select></label>
+            <button type="button" className="menu-clear-button" onClick={clearFilters} disabled={!hasFilters}>Clear filters</button>
+            <span className="results-count" role="status" aria-live="polite">{resultText}</span>
           </div>
-
-          <button type="button" className="mobile-filter-toggle" aria-expanded={filtersOpen} aria-controls="menu-filters" onClick={() => setFiltersOpen((open) => !open)}>
-            {filtersOpen ? "Hide filters" : "Categories & sort"}
-            <span aria-hidden="true">{filtersOpen ? "−" : "+"}</span>
-          </button>
-
-          <div id="menu-filters" className={`filter-grid${filtersOpen ? " mobile-filters-open" : ""}`}>
-            <div className="filter-group">
-              <div className="filter-label-row">
-                <span className="filter-label">Categories</span>
-                <span className="filter-mini-text">{selectedCategoryName}</span>
-              </div>
-
-              <div className="category-chip-row">
-                <button
-                  type="button"
-                  className={
-                    selectedCategoryId === "ALL"
-                      ? "category-chip active-category-chip"
-                      : "category-chip"
-                  }
-                  onClick={() => setSelectedCategoryId("ALL")}
-                >
-                  All
-                </button>
-
-                {categories.map((category) => (
-                  <button
-                    type="button"
-                    key={category.id}
-                    className={
-                      String(selectedCategoryId) === String(category.id)
-                        ? "category-chip active-category-chip"
-                        : "category-chip"
-                    }
-                    onClick={() => setSelectedCategoryId(category.id)}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="filter-group">
-              <div className="filter-label-row">
-                <span className="filter-label">Sort by Price</span>
-                <span className="filter-mini-text">
-                  {sortDirection === "asc"
-                    ? "Low to High"
-                    : sortDirection === "desc"
-                    ? "High to Low"
-                    : "Default"}
-                </span>
-              </div>
-
-              <div className="sort-chip-row">
-                <button
-                  type="button"
-                  className={
-                    sortDirection === "asc"
-                      ? "sort-chip active-sort-chip"
-                      : "sort-chip"
-                  }
-                  onClick={() => setSortDirection("asc")}
-                >
-                  ↑ Low to High
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    sortDirection === "desc"
-                      ? "sort-chip active-sort-chip"
-                      : "sort-chip"
-                  }
-                  onClick={() => setSortDirection("desc")}
-                >
-                  ↓ High to Low
-                </button>
-
-                <button
-                  type="button"
-                  className="clear-filter-btn"
-                  onClick={clearFilters}
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </div>
-          </div>
+          <div className="menu-desktop-categories"><span>Categories</span>{categoryChoices("category-chip-row")}</div>
           {categoryError && (
             <div className="error-box catalog-filter-error" role="alert">
               <span>{categoryError}</span>
@@ -363,6 +240,25 @@ function Menu() {
           </div>
         )}
       </section>
+      {filtersOpen && (
+        <DialogShell className="menu-filter-overlay" titleId="menu-filter-title" onClose={() => setFiltersOpen(false)}>
+          <div className="menu-filter-drawer">
+            <div className="menu-filter-drawer-header">
+              <div><span>Explore Menu</span><h2 id="menu-filter-title">Filter Meals</h2></div>
+              <button type="button" className="menu-filter-close" aria-label="Close filters" onClick={() => setFiltersOpen(false)}>✕</button>
+            </div>
+            <div className="menu-filter-drawer-body">
+              <h3>Categories</h3>
+              {categoryChoices("menu-drawer-categories")}
+              <label className="menu-drawer-sort" htmlFor="menu-drawer-sort"><span>Sort by Price</span><select id="menu-drawer-sort" value={sortDirection} onChange={(event) => setSortDirection(event.target.value)}><option value="">Recommended</option><option value="asc">Low to high</option><option value="desc">High to low</option></select></label>
+            </div>
+            <div className="menu-filter-drawer-actions">
+              <button type="button" className="menu-drawer-reset" onClick={clearFilters} disabled={!hasFilters}>Reset filters</button>
+              <button type="button" className="menu-drawer-apply" onClick={() => setFiltersOpen(false)}>{loading ? "Show Results" : `Show ${filteredFoods.length} Results`}</button>
+            </div>
+          </div>
+        </DialogShell>
+      )}
     </div>
   );
 }

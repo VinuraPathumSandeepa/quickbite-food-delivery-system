@@ -5,8 +5,13 @@ function DialogShell({ titleId, onClose, children, className = "confirm-modal-ov
 
   useEffect(() => {
     const previousFocus = document.activeElement;
-    dialogRef.current?.querySelector("button:not([disabled]), [href], input, select, textarea")?.focus();
-    return () => previousFocus?.focus?.();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    (dialogRef.current?.querySelector("button:not([disabled]), [href], input, select, textarea") || dialogRef.current)?.focus();
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus?.();
+    };
   }, []);
 
   const handleKeyDown = (event) => {
@@ -24,7 +29,7 @@ function DialogShell({ titleId, onClose, children, className = "confirm-modal-ov
   };
 
   return (
-    <div ref={dialogRef} className={className} role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={handleKeyDown} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div ref={dialogRef} className={className} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onKeyDown={handleKeyDown} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       {children}
     </div>
   );
