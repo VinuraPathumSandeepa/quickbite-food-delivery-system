@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
 import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
+import RetryNotice from "../components/RetryNotice";
+import DialogShell from "../components/DialogShell";
+import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 import { useAuth } from "../context/AuthContext";
 import {
   getBackendFieldErrors,
@@ -16,7 +19,9 @@ function Checkout() {
 
   const [cartItems, setCartItems] = useState([]);
   const [loadingCart, setLoadingCart] = useState(true);
+  const [cartLoadError, setCartLoadError] = useState("");
   const [placingOrder, setPlacingOrder] = useState(false);
+  const submissionInFlight = useRef(false);
 
   const [formData, setFormData] = useState({
     deliveryAddress: currentUser?.address || "",
@@ -41,9 +46,9 @@ function Checkout() {
 
       const response = await api.get(`/cart/${currentUser.id}`);
       setCartItems(response.data);
-      setErrorMessage("");
+      setCartLoadError("");
     } catch {
-      setErrorMessage("Couldn't load your cart. Please try again.");
+      setCartLoadError("Couldn't load your cart. Please try again.");
     } finally {
       setLoadingCart(false);
     }
@@ -152,6 +157,7 @@ function Checkout() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submissionInFlight.current || successOrder) return;
 
     setErrorMessage("");
 
@@ -168,6 +174,7 @@ function Checkout() {
     }
 
     try {
+      submissionInFlight.current = true;
       setPlacingOrder(true);
 
       const orderResponse = await api.post(`/orders/place/${currentUser.id}`, {
@@ -201,6 +208,7 @@ function Checkout() {
         setErrorMessage("Checkout could not be completed. Check My Orders before trying again.");
       }
     } finally {
+      submissionInFlight.current = false;
       setPlacingOrder(false);
     }
   };
@@ -215,10 +223,12 @@ function Checkout() {
       />
 
       <section className="pro-checkout-section">
-        {errorMessage && <div className="error-box">{errorMessage}</div>}
+        {errorMessage && <div className="error-box checkout-error" role="alert"><span>{errorMessage}</span><button type="button" aria-label="Dismiss checkout error" onClick={() => setErrorMessage("")}>✕</button></div>}
 
         {loadingCart ? (
           <LoadingSpinner text="Loading checkout..." />
+        ) : cartLoadError ? (
+          <RetryNotice message={cartLoadError} onRetry={loadCart} />
         ) : cartItems.length === 0 ? (
           <div className="empty-state-card">
             <div className="empty-icon">🛒</div>
@@ -231,7 +241,7 @@ function Checkout() {
           </div>
         ) : (
           <div className="pro-checkout-grid">
-            <form className="pro-checkout-main-card" onSubmit={handleSubmit}>
+            <form className="pro-checkout-main-card" onSubmit={handleSubmit} aria-busy={placingOrder}>
               <div className="checkout-step-header">
                 <div className="checkout-step-icon">📍</div>
                 <div>
@@ -291,6 +301,7 @@ function Checkout() {
                       ? "payment-method-card active-payment-method"
                       : "payment-method-card"
                   }
+                  aria-pressed={formData.paymentMethod === "COD"}
                   onClick={() => handlePaymentMethodChange("COD")}
                 >
                   <div className="payment-method-icon">💵</div>
@@ -308,6 +319,7 @@ function Checkout() {
                       ? "payment-method-card active-payment-method"
                       : "payment-method-card"
                   }
+                  aria-pressed={formData.paymentMethod === "CARD"}
                   onClick={() => handlePaymentMethodChange("CARD")}
                 >
                   <div className="payment-method-icon">💳</div>
@@ -425,7 +437,7 @@ function Checkout() {
               <button
                 type="submit"
                 className="checkout-place-order-btn"
-                disabled={placingOrder}
+                disabled={placingOrder || Boolean(successOrder)}
               >
                 {placingOrder ? "Processing Order..." : "Place Order"}
               </button>
@@ -445,11 +457,9 @@ function Checkout() {
                 {cartItems.map((item) => (
                   <div className="checkout-item" key={item.id}>
                     <img
-                      src={
-                        item.foodItem?.imageUrl ||
-                        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38"
-                      }
+                      src={foodImageSource(item.foodItem?.imageUrl)}
                       alt={item.foodItem?.name}
+                      onError={handleFoodImageError}
                     />
 
                     <div>
@@ -506,11 +516,12 @@ function Checkout() {
       </section>
 
       {successOrder && (
-        <div className="order-success-overlay">
+        <DialogShell className="order-success-overlay" titleId="order-success-title" onClose={() => navigate("/customer/orders")}>
           <div className="order-success-card">
+            <button type="button" className="order-success-close" aria-label="Close order confirmation" onClick={() => navigate("/customer/orders")}>✕</button>
             <div className="order-success-icon">✅</div>
 
-            <h2>Order Placed Successfully!</h2>
+            <h2 id="order-success-title">Order Placed Successfully!</h2>
 
             <p>
               Your order has been created and the payment has been processed
@@ -566,7 +577,7 @@ function Checkout() {
               </button>
             </div>
           </div>
-        </div>
+        </DialogShell>
       )}
     </div>
   );

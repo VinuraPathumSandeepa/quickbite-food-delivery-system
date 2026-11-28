@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Navbar from "../components/Navbar";
@@ -8,6 +8,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import DialogShell from "../components/DialogShell";
 import RetryNotice from "../components/RetryNotice";
 import { useAuth } from "../context/AuthContext";
+import { safeCustomerMessage } from "../utils/validation";
+import { foodImageSource, handleFoodImageError } from "../utils/foodImage";
 
 function CustomerCart() {
   const { currentUser } = useAuth();
@@ -20,7 +22,10 @@ function CustomerCart() {
 
   const [itemToRemove, setItemToRemove] = useState(null);
   const [removing, setRemoving] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState(null);
   const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
+  const quantityUpdateRef = useRef(false);
 
   const loadCart = useCallback(async () => {
     try {
@@ -30,7 +35,7 @@ function CustomerCart() {
       setCartItems(response.data);
       setMessage("");
     } catch (error) {
-      setMessage(error.response?.data?.message || "Failed to load cart.");
+      setMessage(safeCustomerMessage(error, "Couldn't load your cart. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -39,6 +44,8 @@ function CustomerCart() {
   useEffect(() => {
     void Promise.resolve().then(loadCart);
   }, [loadCart]);
+
+  useEffect(() => () => clearTimeout(toastTimerRef.current), []);
 
   const cartData = useMemo(() => {
     const totalAmount = cartItems.reduce((total, item) => {
@@ -60,28 +67,34 @@ function CustomerCart() {
   }, [cartItems]);
 
   const showToast = (toastData) => {
+    clearTimeout(toastTimerRef.current);
     setToast(toastData);
 
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setToast(null);
     }, 3000);
   };
 
   const updateQuantity = async (cartItemId, quantity) => {
-    if (Number(quantity) < 1) return;
+    if (Number(quantity) < 1 || quantityUpdateRef.current) return;
 
     try {
+      quantityUpdateRef.current = true;
+      setUpdatingItemId(cartItemId);
       await api.put(`/cart/item/${cartItemId}`, {
         quantity: Number(quantity),
       });
 
-      loadCart();
+      await loadCart();
     } catch (error) {
       showToast({
         type: "error",
         title: "Update Failed",
-        message: error.response?.data?.message || "Failed to update quantity.",
+        message: safeCustomerMessage(error, "Couldn't update quantity. Please try again."),
       });
+    } finally {
+      quantityUpdateRef.current = false;
+      setUpdatingItemId(null);
     }
   };
 
@@ -119,7 +132,7 @@ function CustomerCart() {
       showToast({
         type: "error",
         title: "Remove Failed",
-        message: error.response?.data?.message || "Failed to remove item.",
+        message: safeCustomerMessage(error, "Couldn't remove this item. Please try again."),
       });
     } finally {
       setRemoving(false);
@@ -152,15 +165,13 @@ function CustomerCart() {
           <div className="cart-content-grid">
             <div className="cart-list">
               {cartItems.map((item) => (
-                <div className="cart-item-card" key={item.id}>
+                <div className="cart-item-card" key={item.id} aria-busy={updatingItemId === item.id}>
                   <div className="cart-food-left">
                     <img
-                      src={
-                        item.foodItem?.imageUrl ||
-                        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38"
-                      }
+                      src={foodImageSource(item.foodItem?.imageUrl)}
                       alt={item.foodItem?.name}
                       className="cart-food-image"
+                      onError={handleFoodImageError}
                     />
 
                     <div className="cart-food-details">
@@ -186,6 +197,7 @@ function CustomerCart() {
                       type="number"
                       min="1"
                       value={item.quantity}
+                      disabled={updatingItemId === item.id}
                       onChange={(e) => updateQuantity(item.id, e.target.value)}
                     />
 
@@ -291,8 +303,9 @@ function CustomerCart() {
               ? "cart-toast cart-toast-success"
               : "cart-toast cart-toast-error"
           }
+          role={toast.type === "error" ? "alert" : "status"}
         >
-          <button className="cart-toast-close" onClick={() => setToast(null)}>
+          <button className="cart-toast-close" type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}>
             ✕
           </button>
 

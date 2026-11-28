@@ -1,0 +1,73 @@
+/* Cart and checkout keep the order summary readable without oversized mobile cards. */
+.cart-section, .pro-checkout-section { padding-block: 32px 60px; }
+.cart-content-grid, .pro-checkout-grid { max-width: 1560px; margin-inline: auto; gap: 22px; }
+.cart-list { gap: 16px; }
+.cart-item-card { min-width: 0; gap: 16px; padding: 18px; border-radius: 20px; }
+.cart-food-left { min-width: 0; gap: 16px; }
+.cart-food-image { width: 120px; height: 100px; border-radius: 14px; }
+.cart-food-details { min-width: 0; }
+.cart-food-details h2 { font-size: 18px; line-height: 1.3; overflow-wrap: anywhere; }
+.cart-item-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: 13px; }
+.cart-food-actions { min-width: 0; padding: 14px; border-radius: 15px; }
+.cart-food-actions input, .cart-remove-btn { min-height: 44px; }
+.cart-summary-card, .pro-checkout-main-card, .pro-checkout-summary-card { min-width: 0; border-radius: 22px; }
+.cart-summary-card { padding: 24px; }
+.pro-checkout-grid { grid-template-columns: minmax(0, 1fr) minmax(310px, 380px); }
+.pro-checkout-main-card, .pro-checkout-summary-card { padding: 26px; }
+.checkout-step-header { margin-bottom: 20px; }
+.checkout-step-header h2 { font-size: 25px; }
+.checkout-step-icon { width: 48px; height: 48px; border-radius: 15px; font-size: 22px; }
+.payment-method-card { min-width: 0; grid-template-columns: 44px minmax(0, 1fr) 26px; gap: 10px; padding: 14px; border-radius: 16px; }
+.payment-method-icon { width: 44px; height: 44px; border-radius: 12px; font-size: 21px; }
+.payment-method-card strong, .payment-method-card span { overflow-wrap: anywhere; }
+.payment-checkmark { width: 26px; height: 26px; }
+.checkout-item { min-width: 0; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 10px; padding: 10px; border-radius: 14px; }
+.checkout-item img { width: 54px; height: 54px; border-radius: 10px; }
+.checkout-item > div { min-width: 0; }
+.checkout-item strong, .checkout-item p, .checkout-item > span, .checkout-summary-lines strong { overflow-wrap: anywhere; }
+.checkout-item > span { white-space: normal; text-align: right; }
+.checkout-error { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.checkout-error button { flex: none; width: 44px; height: 44px; border-radius: 10px; background: transparent; color: inherit; }
+.order-success-card { position: relative; }
+.order-success-close { position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; border-radius: 12px; background: #f4f5f7; color: var(--dark); }
+@media (max-width: 1150px) {
+  .pro-checkout-grid { grid-template-columns: minmax(0, 1fr); max-width: 840px; }
+}
+@media (min-width: 960px) and (max-width: 1100px) {
+  .cart-content-grid { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); }
+  .cart-item-card { grid-template-columns: minmax(0, 1fr); }
+  .cart-food-actions { flex-direction: row; align-items: center; }
+  .cart-food-actions input { width: 80px; }
+}
+@media (max-width: 767px) {
+  .cart-section, .pro-checkout-section { padding: 18px 14px calc(36px + env(safe-area-inset-bottom)); }
+  .cart-content-grid, .pro-checkout-grid { gap: 16px; }
+  .cart-item-card { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 12px; border-radius: 16px; }
+  .cart-food-left { flex-direction: row; align-items: center; gap: 12px; }
+  .cart-food-image { width: 76px; height: 76px; border-radius: 11px; }
+  .cart-item-badge { display: none; }
+  .cart-food-details h2 { margin-bottom: 4px; font-size: 16px; }
+  .cart-item-price { margin-bottom: 3px; font-size: 15px; }
+  .cart-item-description { font-size: 12px; }
+  .cart-food-actions { display: grid; grid-template-columns: auto minmax(64px, 82px) minmax(0, 1fr); align-items: center; gap: 8px; max-width: none; padding: 8px 10px; }
+  .cart-food-actions label { font-size: 13px; }
+  .cart-food-actions input { padding: 7px; text-align: center; }
+  .cart-remove-btn { justify-self: end; padding: 8px 10px; font-size: 13px; }
+  .cart-summary-card, .pro-checkout-main-card, .pro-checkout-summary-card { padding: 18px; border-radius: 18px; }
+  .cart-summary-title-row h2, .checkout-summary-header h2 { font-size: 22px; }
+  .cart-summary-row.total-row strong { font-size: 20px; white-space: nowrap; }
+  .cart-summary-title-row, .checkout-summary-header { margin-bottom: 16px; }
+  .checkout-step-header { gap: 12px; }
+  .checkout-step-header h2 { font-size: 21px; }
+  .checkout-field-group input, .checkout-field-group textarea { min-width: 0; padding: 13px 14px; border-radius: 12px; }
+  .checkout-divider { margin: 24px 0; }
+  .payment-method-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .payment-method-card { grid-template-columns: 44px minmax(0, 1fr) 26px; min-height: 72px; }
+  .payment-checkmark { display: grid; }
+  .pro-card-payment-box { padding: 16px; border-radius: 16px; }
+  .checkout-item { grid-template-columns: 48px minmax(0, 1fr); }
+  .checkout-item img { width: 48px; height: 48px; }
+  .checkout-item > span { grid-column: 2; text-align: left; }
+  .checkout-total-line strong { font-size: 20px; }
+  .checkout-place-order-btn { min-height: 52px; height: auto; padding: 12px; border-radius: 13px; }
+}
